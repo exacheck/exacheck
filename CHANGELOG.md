@@ -3,6 +3,7 @@
 Fixes:
 
 - Formatting fixup in `__version__.py`
+- Ensure STDOUT is flushed on route announce/withdraw
 
 Changes:
 
