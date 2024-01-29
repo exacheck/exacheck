@@ -1,5 +1,5 @@
 # Set Python release to use as base
-ARG PYTHON_VERSION=3.12
+ARG PYTHON_VERSION=3.11
 
 # Use Python image
 FROM python:${PYTHON_VERSION}-slim

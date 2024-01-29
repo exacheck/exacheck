@@ -3,7 +3,7 @@
 # ExaBGP will run privileged; do not use in production!
 
 # Set Python release to build/use
-ARG PYTHON_VERSION=3.12
+ARG PYTHON_VERSION=3.11
 
 # Create base stage
 FROM python:${PYTHON_VERSION}-slim AS base
