@@ -6,6 +6,7 @@
   ],
   "settings": {
     "editor.tabSize": 4,
+    "cSpell.language": "en-GB",
     "cSpell.words": [
       "addressfamilyerror",
       "addrinfo",
