@@ -2,7 +2,7 @@
 name = "exacheck"
 description = "ExaCheck - ExaBGP Health Checker"
 authors = ["Chris <git@gbe0.com>"]
-version = "0.0.2"
+version = "0.0.3a0"
 readme = "README.md"
 homepage = "https://exacheck.net"
 repository = "https://github.com/exacheck/exacheck"
@@ -67,10 +67,6 @@ pytest-html = "^4.1.1"
 semgrep = "^1.56.0"
 
 [tool.poetry.extras]
-cli = [
-  "click",
-  "loguru",
-]
 formatting = [
   "autopep8",
   "black",
