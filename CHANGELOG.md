@@ -1,4 +1,4 @@
-## Pending Release
+## 2024-01-29 - 0.0.4
 
 Fixes:
 
