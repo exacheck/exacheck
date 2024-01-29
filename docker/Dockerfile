@@ -38,4 +38,4 @@ EXPOSE 179/tcp
 
 # Set entrypoint and run ExaBGP
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
-CMD ["/usr/local/bin/exabgp"]
+CMD ["/usr/local/bin/exabgp", "/etc/exabgp/exabgp.conf"]
