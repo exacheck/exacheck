@@ -30,7 +30,8 @@ RUN useradd -Ms /bin/bash exabgp \
 USER exabgp
 
 # Set environment variables for ExaBGP
-ENV exabgp.daemon.user=exabgp
+ENV exabgp.daemon.user=exabgp \
+    exabgp.api.ack=false
 
 # Expose BGP port
 EXPOSE 179/tcp
