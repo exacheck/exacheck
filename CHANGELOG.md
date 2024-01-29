@@ -1,3 +1,9 @@
+## Unreleased - 0.0.6
+
+Fixes:
+
+- Formatting fixup in `__version__.py`
+
 ## 2024-01-29 - 0.0.5
 
 Fixes:
