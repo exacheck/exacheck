@@ -1,0 +1,1530 @@
+{
+    "$defs": {
+        "Check": {
+            "additionalProperties": false,
+            "description": "The common base check method",
+            "properties": {
+                "name": {
+                    "description": "The name of the check",
+                    "pattern": "^[^\\\"']+$",
+                    "title": "Check Name",
+                    "type": "string"
+                },
+                "description": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "An optional description for the health check (not parsed)",
+                    "title": "Check Description"
+                },
+                "args": {
+                    "description": "The arguments for the health check check",
+                    "discriminator": {
+                        "mapping": {
+                            "dns": "#/$defs/DNSArgs",
+                            "file": "#/$defs/FileArgs",
+                            "http": "#/$defs/HTTPArgs",
+                            "icmp": "#/$defs/ICMPArgs",
+                            "ntp": "#/$defs/NTPArgs",
+                            "shell": "#/$defs/ShellArgs",
+                            "tcp": "#/$defs/TCPArgs"
+                        },
+                        "propertyName": "method"
+                    },
+                    "oneOf": [
+                        {
+                            "$ref": "#/$defs/DNSArgs"
+                        },
+                        {
+                            "$ref": "#/$defs/FileArgs"
+                        },
+                        {
+                            "$ref": "#/$defs/HTTPArgs"
+                        },
+                        {
+                            "$ref": "#/$defs/ICMPArgs"
+                        },
+                        {
+                            "$ref": "#/$defs/NTPArgs"
+                        },
+                        {
+                            "$ref": "#/$defs/ShellArgs"
+                        },
+                        {
+                            "$ref": "#/$defs/TCPArgs"
+                        }
+                    ],
+                    "title": "Check Arguments"
+                },
+                "path_id": {
+                    "anyOf": [
+                        {
+                            "maximum": 4294967295,
+                            "minimum": 0,
+                            "type": "integer"
+                        },
+                        {
+                            "format": "ipv4",
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The path ID to announce with the route",
+                    "title": "Path ID"
+                },
+                "prefixes": {
+                    "description": "The list of IP addresses or prefixes that will be advertised",
+                    "items": {
+                        "format": "ipvanynetwork",
+                        "type": "string"
+                    },
+                    "title": "Prefixes",
+                    "type": "array"
+                },
+                "nexthop": {
+                    "anyOf": [
+                        {
+                            "format": "ipvanyaddress",
+                            "type": "string"
+                        },
+                        {
+                            "const": "self"
+                        }
+                    ],
+                    "description": "The next-hop address for the prefix that will be advertised",
+                    "title": "Next Hop"
+                },
+                "metric": {
+                    "anyOf": [
+                        {
+                            "maximum": 4294967295,
+                            "minimum": 0,
+                            "type": "integer"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The metric to advertise with the route",
+                    "title": "Metric"
+                },
+                "metric_down": {
+                    "anyOf": [
+                        {
+                            "maximum": 4294967295,
+                            "minimum": 0,
+                            "type": "integer"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "If the health check fails, continue to announce the route but with this metric",
+                    "title": "Down Metric"
+                },
+                "local_preference": {
+                    "anyOf": [
+                        {
+                            "maximum": 4294967295,
+                            "minimum": 0,
+                            "type": "integer"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The local preference to announce with the route",
+                    "title": "Local Preference"
+                },
+                "disable": {
+                    "anyOf": [
+                        {
+                            "format": "path",
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "If the file exists, the route will be withdrawn and the check will be disabled",
+                    "title": "Disable File"
+                },
+                "neighbors": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "format": "ipvanyaddress",
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Filter the route to only be announced to the specified neighbors",
+                    "title": "Neighbors"
+                },
+                "communities": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Announce the route with the specified BGP communities",
+                    "title": "BGP Communities"
+                },
+                "as_path": {
+                    "anyOf": [
+                        {
+                            "exclusiveMinimum": 0,
+                            "maximum": 4294967294,
+                            "type": "integer"
+                        },
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Announce the route with the specified AS path",
+                    "title": "AS Path"
+                },
+                "interval": {
+                    "anyOf": [
+                        {
+                            "exclusiveMinimum": 0,
+                            "type": "integer"
+                        },
+                        {
+                            "exclusiveMinimum": 0.0,
+                            "type": "number"
+                        }
+                    ],
+                    "default": 15,
+                    "description": "The interval in seconds between checks",
+                    "title": "Check Interval"
+                },
+                "rise": {
+                    "default": 3,
+                    "description": "The number of consecutive successful checks required to mark the check as healthy",
+                    "minimum": 0,
+                    "title": "Rise",
+                    "type": "integer"
+                },
+                "fall": {
+                    "default": 3,
+                    "description": "The number of consecutive failed checks required to mark the check as failed",
+                    "minimum": 0,
+                    "title": "Fall",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "args",
+                "prefixes",
+                "nexthop"
+            ],
+            "title": "Check",
+            "type": "object"
+        },
+        "DNSArgs": {
+            "additionalProperties": false,
+            "description": "Model for DNS check arguments",
+            "properties": {
+                "timeout": {
+                    "default": 10,
+                    "description": "The total timeout in seconds for the check to execute",
+                    "exclusiveMinimum": 0,
+                    "title": "General Check Timeout",
+                    "type": "integer"
+                },
+                "host": {
+                    "description": "The hostname or IP address the health check will be performed against",
+                    "title": "Hostname/IP Address",
+                    "type": "string"
+                },
+                "address_family": {
+                    "anyOf": [
+                        {
+                            "enum": [
+                                "ipv4",
+                                "ipv6"
+                            ],
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "If checking a hostname, force the check to the specified address family",
+                    "title": "Address Family"
+                },
+                "all_valid": {
+                    "default": false,
+                    "description": "If checking a hostname, require all IP addresses from the DNS response to pass the health check. If False, any single IP address that returns a successful check will return the service as healthy.",
+                    "title": "All IP Addresses Valid",
+                    "type": "boolean"
+                },
+                "method": {
+                    "const": "dns",
+                    "description": "Send a query to a DNS server and optionally validate the response",
+                    "title": "DNS Check Method"
+                },
+                "query": {
+                    "description": "The name to query",
+                    "title": "Query Name",
+                    "type": "string"
+                },
+                "query_type": {
+                    "default": "soa",
+                    "description": "The type of DNS query to send",
+                    "enum": [
+                        "a",
+                        "aaaa",
+                        "any",
+                        "cname",
+                        "mx",
+                        "ns",
+                        "ptr",
+                        "soa",
+                        "srv",
+                        "txt"
+                    ],
+                    "title": "Query Type",
+                    "type": "string"
+                },
+                "response": {
+                    "anyOf": [
+                        {
+                            "format": "regex",
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The regular expression to match in the answers received from the DNS server",
+                    "title": "Response Pattern"
+                },
+                "tcp": {
+                    "default": false,
+                    "description": "Send the DNS query using TCP rather than UDP",
+                    "title": "Use TCP",
+                    "type": "boolean"
+                },
+                "port": {
+                    "default": 53,
+                    "description": "The port to send the DNS query to",
+                    "exclusiveMinimum": 0,
+                    "maximum": 65535,
+                    "title": "Port",
+                    "type": "integer"
+                },
+                "dns_timeout": {
+                    "anyOf": [
+                        {
+                            "exclusiveMinimum": 0,
+                            "type": "integer"
+                        },
+                        {
+                            "exclusiveMinimum": 0.0,
+                            "type": "number"
+                        }
+                    ],
+                    "default": 5,
+                    "description": "The timeout for the DNS request",
+                    "title": "DNS Timeout"
+                },
+                "require_resolve": {
+                    "default": true,
+                    "description": "Require the server to response with an answer and not a value such as NXDOMAIN or SRVFAIL",
+                    "title": "Require Resolve",
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "host",
+                "method",
+                "query"
+            ],
+            "title": "Check Arguments",
+            "type": "object"
+        },
+        "FileArgs": {
+            "additionalProperties": false,
+            "description": "Model for file check arguments",
+            "properties": {
+                "timeout": {
+                    "default": 10,
+                    "description": "The total timeout in seconds for the check to execute",
+                    "exclusiveMinimum": 0,
+                    "title": "General Check Timeout",
+                    "type": "integer"
+                },
+                "method": {
+                    "const": "file",
+                    "description": "Test if a file exists or doesn't exist",
+                    "title": "File Check Method"
+                },
+                "path": {
+                    "description": "The path to the file that should be checked",
+                    "format": "path",
+                    "title": "File Path",
+                    "type": "string"
+                },
+                "exists": {
+                    "default": true,
+                    "description": "If set to false the check will fail if the file exists",
+                    "title": "File Exists",
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "method",
+                "path"
+            ],
+            "title": "Check Arguments",
+            "type": "object"
+        },
+        "HTTPArgs": {
+            "additionalProperties": false,
+            "description": "Model for HTTP check arguments",
+            "properties": {
+                "timeout": {
+                    "default": 10,
+                    "description": "The total timeout in seconds for the check to execute",
+                    "exclusiveMinimum": 0,
+                    "title": "General Check Timeout",
+                    "type": "integer"
+                },
+                "host": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The hostname or IP address the health check will be performed against",
+                    "title": "Hostname/IP Address"
+                },
+                "address_family": {
+                    "anyOf": [
+                        {
+                            "enum": [
+                                "ipv4",
+                                "ipv6"
+                            ],
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "If checking a hostname, force the check to the specified address family",
+                    "title": "Address Family"
+                },
+                "all_valid": {
+                    "default": false,
+                    "description": "If checking a hostname, require all IP addresses from the DNS response to pass the health check. If False, any single IP address that returns a successful check will return the service as healthy.",
+                    "title": "All IP Addresses Valid",
+                    "type": "boolean"
+                },
+                "method": {
+                    "const": "http",
+                    "description": "Send a HTTP or HTTPS request to a web server and optionally perform various validation",
+                    "title": "HTTP Check Method"
+                },
+                "url": {
+                    "description": "The HTTP/HTTPS URL to check",
+                    "format": "uri",
+                    "minLength": 1,
+                    "title": "URL",
+                    "type": "string"
+                },
+                "response": {
+                    "anyOf": [
+                        {
+                            "format": "regex",
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The regular expression to match in the response body of the HTTP request",
+                    "title": "Response Pattern"
+                },
+                "expected_status": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "exclusiveMinimum": 0,
+                                "type": "integer"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "One or more HTTP status codes that indicate a successful response",
+                    "title": "Expected Status Code"
+                },
+                "require_status": {
+                    "default": true,
+                    "description": "Require a 2xx HTTP status code to indicate a successful response",
+                    "title": "Require 2xx Status Code",
+                    "type": "boolean"
+                },
+                "http_timeout": {
+                    "anyOf": [
+                        {
+                            "exclusiveMinimum": 0,
+                            "type": "integer"
+                        },
+                        {
+                            "exclusiveMinimum": 0.0,
+                            "type": "number"
+                        }
+                    ],
+                    "default": 5,
+                    "description": "The timeout for the HTTP request",
+                    "title": "HTTP Timeout"
+                },
+                "user_agent": {
+                    "default": "ExaCheck HTTP Health Check [v1.0.0]",
+                    "description": "The user agent to send with the HTTP request",
+                    "title": "User Agent",
+                    "type": "string"
+                },
+                "headers": {
+                    "anyOf": [
+                        {
+                            "additionalProperties": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "number"
+                                    }
+                                ]
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Any additional HTTP headers to send with the HTTP request",
+                    "title": "Headers"
+                },
+                "verify_ssl": {
+                    "default": false,
+                    "description": "If making a request to an HTTPS URL, verify the SSL certificate",
+                    "title": "Verify SSL",
+                    "type": "boolean"
+                },
+                "request_method": {
+                    "default": "GET",
+                    "description": "The method for the HTTP request",
+                    "enum": [
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "DELETE",
+                        "HEAD",
+                        "OPTIONS"
+                    ],
+                    "title": "Request Method",
+                    "type": "string"
+                },
+                "data": {
+                    "anyOf": [
+                        {
+                            "additionalProperties": {
+                                "type": "string"
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The request data to send for POST requests",
+                    "title": "Request Data"
+                }
+            },
+            "required": [
+                "method",
+                "url"
+            ],
+            "title": "Check Arguments",
+            "type": "object"
+        },
+        "ICMPArgs": {
+            "additionalProperties": false,
+            "description": "Model for ICMP check arguments",
+            "properties": {
+                "timeout": {
+                    "default": 10,
+                    "description": "The total timeout in seconds for the check to execute",
+                    "exclusiveMinimum": 0,
+                    "title": "General Check Timeout",
+                    "type": "integer"
+                },
+                "host": {
+                    "description": "The hostname or IP address the health check will be performed against",
+                    "title": "Hostname/IP Address",
+                    "type": "string"
+                },
+                "address_family": {
+                    "anyOf": [
+                        {
+                            "enum": [
+                                "ipv4",
+                                "ipv6"
+                            ],
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "If checking a hostname, force the check to the specified address family",
+                    "title": "Address Family"
+                },
+                "all_valid": {
+                    "default": false,
+                    "description": "If checking a hostname, require all IP addresses from the DNS response to pass the health check. If False, any single IP address that returns a successful check will return the service as healthy.",
+                    "title": "All IP Addresses Valid",
+                    "type": "boolean"
+                },
+                "method": {
+                    "const": "icmp",
+                    "description": "Send ICMP ping packets and ensure the responses are within the configured thresholds",
+                    "title": "ICMP Check Method"
+                },
+                "count": {
+                    "default": 3,
+                    "description": "The number of ICMP packets to send",
+                    "exclusiveMinimum": 0,
+                    "title": "Count",
+                    "type": "integer"
+                },
+                "interval": {
+                    "anyOf": [
+                        {
+                            "minimum": 0,
+                            "type": "integer"
+                        },
+                        {
+                            "minimum": 0.0,
+                            "type": "number"
+                        }
+                    ],
+                    "default": 0.25,
+                    "description": "The interval in seconds between ICMP packets",
+                    "title": "Interval"
+                },
+                "icmp_timeout": {
+                    "anyOf": [
+                        {
+                            "exclusiveMinimum": 0,
+                            "type": "integer"
+                        },
+                        {
+                            "exclusiveMinimum": 0.0,
+                            "type": "number"
+                        }
+                    ],
+                    "default": 2,
+                    "description": "The timeout for each ICMP packet in seconds",
+                    "title": "ICMP Timeout"
+                },
+                "privileged": {
+                    "default": false,
+                    "description": "Send ICMP packets in privileged mode (requires root)",
+                    "title": "Privileged Mode",
+                    "type": "boolean"
+                },
+                "max_loss": {
+                    "default": 0,
+                    "description": "The maximum number of packets that can be lost before the check is marked as failed",
+                    "minimum": 0,
+                    "title": "Maximum Packets Lost",
+                    "type": "integer"
+                },
+                "max_latency": {
+                    "anyOf": [
+                        {
+                            "exclusiveMinimum": 0,
+                            "type": "integer"
+                        },
+                        {
+                            "exclusiveMinimum": 0.0,
+                            "type": "number"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The highest maximum latency in milliseconds allowed before the check is marked as failed",
+                    "title": "Maximum Latency"
+                },
+                "max_jitter": {
+                    "anyOf": [
+                        {
+                            "exclusiveMinimum": 0,
+                            "type": "integer"
+                        },
+                        {
+                            "exclusiveMinimum": 0.0,
+                            "type": "number"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The maximum jitter in milliseconds allowed before the check is marked as failed",
+                    "title": "Maximum Jitter"
+                }
+            },
+            "required": [
+                "host",
+                "method"
+            ],
+            "title": "Check Arguments",
+            "type": "object"
+        },
+        "LogFile": {
+            "additionalProperties": false,
+            "description": "Define and store parsed configuration for file based logging",
+            "properties": {
+                "level": {
+                    "default": "info",
+                    "description": "The minimum log level to write logs for",
+                    "enum": [
+                        "error",
+                        "warning",
+                        "info",
+                        "success",
+                        "debug",
+                        "trace"
+                    ],
+                    "title": "Log Level",
+                    "type": "string"
+                },
+                "formatter": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The custom log format string to use",
+                    "title": "Custom Format String"
+                },
+                "events": {
+                    "default": [
+                        "announce",
+                        "error",
+                        "info",
+                        "withdraw"
+                    ],
+                    "description": "The list of events that should be logged to this logging target",
+                    "items": {
+                        "enum": [
+                            "announce",
+                            "datadump",
+                            "debug",
+                            "error",
+                            "info",
+                            "withdraw"
+                        ],
+                        "type": "string"
+                    },
+                    "title": "Log Events",
+                    "type": "array"
+                },
+                "subsystems": {
+                    "default": [
+                        "announcer",
+                        "configuration",
+                        "executor",
+                        "healthcheck",
+                        "logging",
+                        "master",
+                        "notification",
+                        "utility",
+                        "worker"
+                    ],
+                    "description": "The list of subsystems that should be logged to this logging target",
+                    "items": {
+                        "enum": [
+                            "announcer",
+                            "configuration",
+                            "executor",
+                            "healthcheck",
+                            "logging",
+                            "master",
+                            "notification",
+                            "utility",
+                            "worker"
+                        ],
+                        "type": "string"
+                    },
+                    "title": "Log Subsystem",
+                    "type": "array"
+                },
+                "checks": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The list of checks that should be logged to this logging target",
+                    "title": "Log Checks"
+                },
+                "method": {
+                    "const": "file",
+                    "description": "Enable file based logging",
+                    "title": "Log Method"
+                },
+                "structured": {
+                    "default": false,
+                    "description": "Use structured logging format",
+                    "title": "Structured Logging",
+                    "type": "boolean"
+                },
+                "destination": {
+                    "anyOf": [
+                        {
+                            "format": "path",
+                            "type": "string"
+                        },
+                        {
+                            "format": "file-path",
+                            "type": "string"
+                        }
+                    ],
+                    "default": "/tmp/exacheck.log",
+                    "description": "The path to the log file to write to",
+                    "title": "Destination File"
+                },
+                "size": {
+                    "default": "10MB",
+                    "description": "The maximum size of the log before it is rotated or overwritten",
+                    "pattern": "(?i)^\\d+((k|m|g|t)b|b)?$",
+                    "title": "Log File Size",
+                    "type": "string"
+                },
+                "count": {
+                    "default": 5,
+                    "description": "The number of log file rotations to keep",
+                    "exclusiveMinimum": 0,
+                    "title": "Log Count",
+                    "type": "integer"
+                },
+                "compress": {
+                    "default": true,
+                    "description": "Enable compression for the rotated logs using compression_format",
+                    "title": "Compress Logs",
+                    "type": "boolean"
+                },
+                "compression_format": {
+                    "default": "gz",
+                    "description": "If compress is enabled, the log compression format to use for rotated logs",
+                    "enum": [
+                        "gz",
+                        "bz2",
+                        "xz",
+                        "lzma",
+                        "tar",
+                        "tar.gz",
+                        "tar.bz2",
+                        "tar.xz",
+                        "zip"
+                    ],
+                    "title": "Compression Format",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "method"
+            ],
+            "title": "LogFile",
+            "type": "object"
+        },
+        "NTPArgs": {
+            "additionalProperties": false,
+            "description": "Model for NTP check arguments",
+            "properties": {
+                "timeout": {
+                    "default": 10,
+                    "description": "The total timeout in seconds for the check to execute",
+                    "exclusiveMinimum": 0,
+                    "title": "General Check Timeout",
+                    "type": "integer"
+                },
+                "host": {
+                    "description": "The hostname or IP address the health check will be performed against",
+                    "title": "Hostname/IP Address",
+                    "type": "string"
+                },
+                "address_family": {
+                    "anyOf": [
+                        {
+                            "enum": [
+                                "ipv4",
+                                "ipv6"
+                            ],
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "If checking a hostname, force the check to the specified address family",
+                    "title": "Address Family"
+                },
+                "all_valid": {
+                    "default": false,
+                    "description": "If checking a hostname, require all IP addresses from the DNS response to pass the health check. If False, any single IP address that returns a successful check will return the service as healthy.",
+                    "title": "All IP Addresses Valid",
+                    "type": "boolean"
+                },
+                "method": {
+                    "const": "ntp",
+                    "description": "Send a NTP query to a NTP server and validate the response is within the configured thresholds",
+                    "title": "NTP Check Method"
+                },
+                "port": {
+                    "default": 123,
+                    "description": "The port to send the NTP query to",
+                    "exclusiveMinimum": 0,
+                    "maximum": 65535,
+                    "title": "Port",
+                    "type": "integer"
+                },
+                "version": {
+                    "default": 3,
+                    "description": "The NTP version to use for the NTP request",
+                    "enum": [
+                        2,
+                        3
+                    ],
+                    "title": "NTP Version",
+                    "type": "integer"
+                },
+                "ntp_timeout": {
+                    "anyOf": [
+                        {
+                            "exclusiveMinimum": 0,
+                            "type": "integer"
+                        },
+                        {
+                            "exclusiveMinimum": 0.0,
+                            "type": "number"
+                        }
+                    ],
+                    "default": 5,
+                    "description": "The timeout for the NTP request",
+                    "title": "NTP Timeout"
+                },
+                "max_offset": {
+                    "anyOf": [
+                        {
+                            "exclusiveMinimum": 0,
+                            "type": "integer"
+                        },
+                        {
+                            "exclusiveMinimum": 0.0,
+                            "type": "number"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The maximum offset +/- allowable in seconds before the server is marked as unhealthy",
+                    "title": "Maximum NTP Offset"
+                },
+                "max_stratum": {
+                    "anyOf": [
+                        {
+                            "maximum": 15,
+                            "minimum": 0,
+                            "type": "integer"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The maximum stratum value before the server is marked as unhealthy",
+                    "title": "Maximum NTP Stratum"
+                }
+            },
+            "required": [
+                "host",
+                "method"
+            ],
+            "title": "Check Arguments",
+            "type": "object"
+        },
+        "Notifications": {
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "description": "The name of the notification service",
+                    "pattern": "^[^\\\"']+$",
+                    "title": "Notification Name",
+                    "type": "string"
+                },
+                "description": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "An optional description for the notification service (not parsed)",
+                    "title": "Check Description"
+                },
+                "url": {
+                    "description": "The URL to send notifications to (with Apprise)",
+                    "format": "uri",
+                    "minLength": 1,
+                    "title": "URL",
+                    "type": "string"
+                },
+                "checks": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The list of checks that should have notifications sent to this target",
+                    "title": "Notify Checks"
+                },
+                "events": {
+                    "default": [
+                        "announce",
+                        "error",
+                        "info",
+                        "withdraw"
+                    ],
+                    "description": "The list of events that should result in notifications being sent to this target",
+                    "items": {
+                        "enum": [
+                            "announce",
+                            "info",
+                            "error",
+                            "withdraw"
+                        ],
+                        "type": "string"
+                    },
+                    "title": "Notify Events",
+                    "type": "array"
+                },
+                "general_events": {
+                    "default": false,
+                    "description": "Whether general events not associated with any check should be sent to this target",
+                    "title": "General Events",
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "name",
+                "url"
+            ],
+            "title": "Notifications",
+            "type": "object"
+        },
+        "Sentry": {
+            "additionalProperties": false,
+            "description": "Configuration for sentry SDK",
+            "properties": {
+                "dsn": {
+                    "description": "The DSN to send to send Sentry logs to",
+                    "format": "uri",
+                    "maxLength": 2083,
+                    "minLength": 1,
+                    "title": "DSN",
+                    "type": "string"
+                },
+                "enabled": {
+                    "default": true,
+                    "description": "If Sentry should be sending events to the specified DSN",
+                    "title": "Enable",
+                    "type": "boolean"
+                },
+                "sample_rate": {
+                    "default": 1.0,
+                    "description": "The rate at which to sample events for Sentry",
+                    "minimum": 0.0,
+                    "title": "Sample Rate",
+                    "type": "number"
+                },
+                "profiles_sample_rate": {
+                    "default": 0.0,
+                    "description": "If set, the Sentry profiling feature will be enabled at the specified sampling rate",
+                    "minimum": 0.0,
+                    "title": "Profile Sample Rate",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "dsn"
+            ],
+            "title": "Sentry",
+            "type": "object"
+        },
+        "ShellArgs": {
+            "additionalProperties": false,
+            "description": "Model for shell command check arguments",
+            "properties": {
+                "timeout": {
+                    "default": 10,
+                    "description": "The total timeout in seconds for the check to execute",
+                    "exclusiveMinimum": 0,
+                    "title": "General Check Timeout",
+                    "type": "integer"
+                },
+                "method": {
+                    "const": "shell",
+                    "description": "Run a script to determine if a service is healthy or not based on the exit code",
+                    "title": "Shell Check Method"
+                },
+                "command": {
+                    "description": "The shell command to run for the health check",
+                    "title": "Shell Command",
+                    "type": "string"
+                },
+                "environment": {
+                    "anyOf": [
+                        {
+                            "additionalProperties": {
+                                "type": "string"
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Environment variables to set when running the command",
+                    "title": "Environment Variables"
+                }
+            },
+            "required": [
+                "method",
+                "command"
+            ],
+            "title": "Check Arguments",
+            "type": "object"
+        },
+        "Syslog": {
+            "additionalProperties": false,
+            "description": "Define and store parsed configuration for syslog based logging",
+            "properties": {
+                "level": {
+                    "default": "info",
+                    "description": "The minimum log level to write logs for",
+                    "enum": [
+                        "error",
+                        "warning",
+                        "info",
+                        "success",
+                        "debug",
+                        "trace"
+                    ],
+                    "title": "Log Level",
+                    "type": "string"
+                },
+                "formatter": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The custom log format string to use",
+                    "title": "Custom Format String"
+                },
+                "events": {
+                    "default": [
+                        "announce",
+                        "error",
+                        "info",
+                        "withdraw"
+                    ],
+                    "description": "The list of events that should be logged to this logging target",
+                    "items": {
+                        "enum": [
+                            "announce",
+                            "datadump",
+                            "debug",
+                            "error",
+                            "info",
+                            "withdraw"
+                        ],
+                        "type": "string"
+                    },
+                    "title": "Log Events",
+                    "type": "array"
+                },
+                "subsystems": {
+                    "default": [
+                        "announcer",
+                        "configuration",
+                        "executor",
+                        "healthcheck",
+                        "logging",
+                        "master",
+                        "notification",
+                        "utility",
+                        "worker"
+                    ],
+                    "description": "The list of subsystems that should be logged to this logging target",
+                    "items": {
+                        "enum": [
+                            "announcer",
+                            "configuration",
+                            "executor",
+                            "healthcheck",
+                            "logging",
+                            "master",
+                            "notification",
+                            "utility",
+                            "worker"
+                        ],
+                        "type": "string"
+                    },
+                    "title": "Log Subsystem",
+                    "type": "array"
+                },
+                "checks": {
+                    "anyOf": [
+                        {
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The list of checks that should be logged to this logging target",
+                    "title": "Log Checks"
+                },
+                "method": {
+                    "const": "syslog",
+                    "description": "Enable logging to a syslog server hostname, IP address or socket",
+                    "title": "Log Method"
+                },
+                "structured": {
+                    "default": true,
+                    "description": "Use structured logging format",
+                    "title": "Structured Logging",
+                    "type": "boolean"
+                },
+                "destination": {
+                    "anyOf": [
+                        {
+                            "const": "/dev/log"
+                        },
+                        {
+                            "format": "file-path",
+                            "type": "string"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "default": "/dev/log",
+                    "description": "The destination IP address or hostname to send messages to",
+                    "title": "Syslog Destination"
+                },
+                "port": {
+                    "default": 514,
+                    "description": "The port to send syslog messages to",
+                    "exclusiveMinimum": 0,
+                    "maximum": 65535,
+                    "title": "Syslog Port",
+                    "type": "integer"
+                },
+                "protocol": {
+                    "default": "udp",
+                    "description": "The protocol to send syslog messages with",
+                    "enum": [
+                        "tcp",
+                        "udp"
+                    ],
+                    "title": "Syslog Protocol",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "method"
+            ],
+            "title": "Syslog",
+            "type": "object"
+        },
+        "TCPArgs": {
+            "additionalProperties": false,
+            "description": "Model for TCP check arguments",
+            "properties": {
+                "timeout": {
+                    "default": 10,
+                    "description": "The total timeout in seconds for the check to execute",
+                    "exclusiveMinimum": 0,
+                    "title": "General Check Timeout",
+                    "type": "integer"
+                },
+                "host": {
+                    "description": "The hostname or IP address the health check will be performed against",
+                    "title": "Hostname/IP Address",
+                    "type": "string"
+                },
+                "address_family": {
+                    "anyOf": [
+                        {
+                            "enum": [
+                                "ipv4",
+                                "ipv6"
+                            ],
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "If checking a hostname, force the check to the specified address family",
+                    "title": "Address Family"
+                },
+                "all_valid": {
+                    "default": false,
+                    "description": "If checking a hostname, require all IP addresses from the DNS response to pass the health check. If False, any single IP address that returns a successful check will return the service as healthy.",
+                    "title": "All IP Addresses Valid",
+                    "type": "boolean"
+                },
+                "method": {
+                    "const": "tcp",
+                    "description": "Open a TCP connection to a host/port and ensure it is successful",
+                    "title": "TCO Check Method"
+                },
+                "port": {
+                    "description": "The port to attempt connecting to",
+                    "exclusiveMinimum": 0,
+                    "maximum": 65535,
+                    "title": "Port",
+                    "type": "integer"
+                },
+                "tcp_timeout": {
+                    "anyOf": [
+                        {
+                            "exclusiveMinimum": 0,
+                            "type": "integer"
+                        },
+                        {
+                            "exclusiveMinimum": 0.0,
+                            "type": "number"
+                        }
+                    ],
+                    "default": 5,
+                    "description": "The timeout for the TCP connection",
+                    "title": "TCP Timeout"
+                }
+            },
+            "required": [
+                "host",
+                "method",
+                "port"
+            ],
+            "title": "Check Arguments",
+            "type": "object"
+        }
+    },
+    "additionalProperties": false,
+    "description": "Define and store the parsed configuration for ExaCheck",
+    "properties": {
+        "file": {
+            "anyOf": [
+                {
+                    "format": "file-path",
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "description": "The path to the configuration file that was loaded",
+            "title": "Configuration File"
+        },
+        "live_reload": {
+            "default": false,
+            "description": "Automatically reload the configuration on any changes",
+            "title": "Live Reload",
+            "type": "boolean"
+        },
+        "monitoring_interval": {
+            "anyOf": [
+                {
+                    "exclusiveMinimum": 0,
+                    "type": "integer"
+                },
+                {
+                    "exclusiveMinimum": 0.0,
+                    "type": "number"
+                }
+            ],
+            "default": 30,
+            "description": "The interval in seconds between checking the health of each check process/thread and looking for changes to the configuration file",
+            "title": "Monitoring Interval"
+        },
+        "checks": {
+            "description": "The list of health checks to perform",
+            "items": {
+                "$ref": "#/$defs/Check"
+            },
+            "title": "Checks",
+            "type": "array"
+        },
+        "logging": {
+            "anyOf": [
+                {
+                    "items": {
+                        "discriminator": {
+                            "mapping": {
+                                "file": "#/$defs/LogFile",
+                                "syslog": "#/$defs/Syslog"
+                            },
+                            "propertyName": "method"
+                        },
+                        "oneOf": [
+                            {
+                                "$ref": "#/$defs/LogFile"
+                            },
+                            {
+                                "$ref": "#/$defs/Syslog"
+                            }
+                        ]
+                    },
+                    "type": "array"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "description": "The logging configuration for ExaCheck",
+            "title": "Logging Configuration"
+        },
+        "notifications": {
+            "anyOf": [
+                {
+                    "items": {
+                        "$ref": "#/$defs/Notifications"
+                    },
+                    "type": "array"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "description": "The list of services to send notifications to for check events",
+            "title": "Notifications"
+        },
+        "sentry": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/Sentry"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "description": "The Sentry SDK configuration for error reporting/profiling",
+            "title": "Sentry Configuration"
+        }
+    },
+    "required": [
+        "checks"
+    ],
+    "title": "Settings",
+    "type": "object"
+}

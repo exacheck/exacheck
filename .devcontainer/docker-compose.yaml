@@ -1,0 +1,25 @@
+---
+
+# Docker compose VS Code development file
+version: '3.8'
+
+services:
+
+  ## Main development container
+  code:
+    build:
+      context: ./code
+    restart: "no"
+    volumes:
+      ## Mount the development container to /code
+      - ..:/code
+      ## Mount a volume containing the VS code extensions to prevent having to install them each rebuild
+      ## A volume will be created for both VS Code and VS Code Insiders edition
+      - code-ext:/home/vscode/.vscode-server
+      - code-ext-insiders:/home/vscode/.vscode-server-insiders
+    tty: true
+
+## Define the named volumes that are used for the above services
+volumes:
+  code-ext:
+  code-ext-insiders:

@@ -1,0 +1,15 @@
+---
+
+# The list of health checks
+checks:
+
+  - name: Valid check
+    description: This is a valid check to google.com using the TCP method on port 80
+    args:
+      method: tcp
+      host: google.com
+      port: 80
+    nexthop: self
+    prefixes:
+      - 192.0.2.0/32
+      - 192.0.2.1

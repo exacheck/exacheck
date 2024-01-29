@@ -1,0 +1,65 @@
+---
+
+# Enable auto reload of configuration
+live_reload: true
+
+# The list of health checks
+checks:
+  - name: ICMP test to Google
+    description: Example ICMP health check to google.com
+    args:
+      method: icmp
+      host: google.com
+      interval: 1
+      count: 2
+    prefixes:
+      - 192.0.2.255
+    nexthop: 192.0.2.0
+    path_id: 1.1.1.1
+
+  - name: TCP test to Google port 80
+    args:
+      method: tcp
+      host: google.com
+      port: 80
+    nexthop: 192.0.2.1
+    prefixes:
+      - 192.0.2.254
+
+  - name: File test to check if /tmp/test exists
+    args:
+      method: file
+      path: /tmp/test
+    nexthop: 192.0.2.2
+    prefixes:
+      - 192.0.2.253
+    as_path: 1234
+    communities:
+      - 123:124
+
+  - name: DNS query to Cloudflare public resolver
+    args:
+      method: dns
+      host: 1.1.1.1
+      query_type: ns
+      query: google.com
+    nexthop: 192.0.2.3
+    prefixes:
+      - 192.0.2.252
+    as_path: 1234
+    communities:
+      - 123:124
+
+  - name: DNS query to Cloudflare public resolver with validation
+    args:
+      method: dns
+      host: 1.1.1.1
+      query_type: ns
+      query: google.com
+      response: ns1.google.com
+    nexthop: 192.0.2.3
+    prefixes:
+      - 192.0.2.252
+    as_path: 1234
+    communities:
+      - 123:124
