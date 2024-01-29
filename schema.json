@@ -377,6 +377,35 @@
             "title": "Check Arguments",
             "type": "object"
         },
+        "ExaCheck": {
+            "additionalProperties": false,
+            "description": "Configuration for ExaCheck",
+            "properties": {
+                "live_reload": {
+                    "default": false,
+                    "description": "Automatically reload the configuration on any changes",
+                    "title": "Live Reload",
+                    "type": "boolean"
+                },
+                "monitoring_interval": {
+                    "anyOf": [
+                        {
+                            "exclusiveMinimum": 0,
+                            "type": "integer"
+                        },
+                        {
+                            "exclusiveMinimum": 0.0,
+                            "type": "number"
+                        }
+                    ],
+                    "default": 30,
+                    "description": "The interval in seconds between checking the health of each check process/thread and looking for changes to the configuration file",
+                    "title": "Monitoring Interval"
+                }
+            },
+            "title": "ExaCheck",
+            "type": "object"
+        },
         "FileArgs": {
             "additionalProperties": false,
             "description": "Model for file check arguments",
@@ -1433,26 +1462,18 @@
             "description": "The path to the configuration file that was loaded",
             "title": "Configuration File"
         },
-        "live_reload": {
-            "default": false,
-            "description": "Automatically reload the configuration on any changes",
-            "title": "Live Reload",
-            "type": "boolean"
-        },
-        "monitoring_interval": {
-            "anyOf": [
+        "exacheck": {
+            "allOf": [
                 {
-                    "exclusiveMinimum": 0,
-                    "type": "integer"
-                },
-                {
-                    "exclusiveMinimum": 0.0,
-                    "type": "number"
+                    "$ref": "#/$defs/ExaCheck"
                 }
             ],
-            "default": 30,
-            "description": "The interval in seconds between checking the health of each check process/thread and looking for changes to the configuration file",
-            "title": "Monitoring Interval"
+            "default": {
+                "live_reload": false,
+                "monitoring_interval": 30
+            },
+            "description": "ExaCheck internal options",
+            "title": "ExaCheck Configuration"
         },
         "checks": {
             "description": "The list of health checks to perform",

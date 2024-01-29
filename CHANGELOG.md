@@ -4,6 +4,10 @@ Fixes:
 
 - Formatting fixup in `__version__.py`
 
+Changes:
+
+- ExaCheck internal configuration (eg. for the `live_reload` feature) has been migrated out of the base `Settings` class. Instead, ExaCheck configuration now resides in its own `settings.ExaCheck` class.
+
 ## 2024-01-29 - 0.0.5
 
 Fixes:
