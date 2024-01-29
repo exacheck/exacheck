@@ -8,6 +8,10 @@ Features:
 
 - Add support for Python 3.11
 
+Misc:
+
+- Update Apprise and dnspython
+
 ## 2024-01-29 - 0.0.3
 
 Fixes:
