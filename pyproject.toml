@@ -9,7 +9,7 @@ repository = "https://github.com/exacheck/exacheck"
 
 [tool.poetry.dependencies]
 # Python version required
-python = "^3.11"
+python = "~3.11"
 
 # Main requirements
 exabgp = "^4.2.21"

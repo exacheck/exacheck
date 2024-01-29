@@ -1,3 +1,9 @@
+## Unreleased
+
+Fixes:
+
+- ExaBGP fails to start on Python 3.12. ExaCheck now requires Python 3.11.
+
 ## 2024-01-29 - 0.0.4
 
 Fixes:
