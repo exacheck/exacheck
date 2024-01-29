@@ -1,0 +1,23 @@
+---
+
+# ExaBGP + ExaCheck Docker Container
+
+version: '3.8'
+
+services:
+  exacheck:
+    build:
+      context: .
+    #image: exacheck/exacheck:latest
+    container_name: exacheck
+    restart: unless-stopped
+    # If you want to use the host network, uncomment the following line
+    # This may be a shortcut for IPv6 support
+    #network_mode: host
+    volumes:
+      # Either the configuration files or a volume/fodler containing the configuration files
+      # exabgp.conf and exacheck.yaml must be mounted for the container to work.
+      - ./exabgp.conf:/etc/exabgp/exabgp.conf:ro
+      - ./exacheck.yaml:/etc/exabgp/exacheck.yaml:ro
+    ports:
+      - 179:179/tcp

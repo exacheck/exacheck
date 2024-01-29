@@ -1,0 +1,4 @@
+# Ignore sample configuration files
+docker-compose.yaml
+exabgp.conf
+exacheck.yaml
