@@ -1,8 +1,12 @@
-## Unreleased
+## 2024-01-29 - 0.0.5
 
 Fixes:
 
 - ExaBGP fails to start on Python 3.12. ExaCheck now requires Python 3.11.
+
+Features
+
+- Docker deployment now available - see the [ExaCheck Docker deployment page](https://exacheck.net/deployment/docker/) for instructions.
 
 ## 2024-01-29 - 0.0.4
 
