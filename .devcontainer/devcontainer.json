@@ -1,7 +1,7 @@
 // For format details, see https://aka.ms/vscode-remote/devcontainer.json or the definition README at
 // https://github.com/microsoft/vscode-dev-containers/tree/master/containers/alpine-3.10-git
 {
-  "name": "Exabgp Health Check Development Environment",
+  "name": "ExaCheck Development Environment",
 
   // Install python requirements:
   "onCreateCommand": ["/usr/local/scripts/create.sh"],
@@ -52,7 +52,6 @@
       "extensions": [
         "gbe0.gbe0-base",
         "gbe0.gbe0-docker",
-        "gbe0.gbe0-gitlab",
         "gbe0.gbe0-github",
         "gbe0.gbe0-markdown",
         "gbe0.gbe0-python",

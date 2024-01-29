@@ -86,9 +86,6 @@
       "workerprocesserror",
       "YXDOMAIN"
     ],
-    "gitlens.remotes": [{ "domain": "git.remote.sx", "type": "GitLab" }],
-    "gitlab.showPipelineUpdateNotifications": true,
-    "gitlab.pipelineGitRemoteName": "origin",
     "python.defaultInterpreterPath": "/home/vscode/conda/envs/exacheck/bin/python3",
     "python.terminal.activateEnvironment": false,
     "notebook.output.textLineLimit": 200,
