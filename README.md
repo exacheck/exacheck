@@ -2,11 +2,7 @@
 
 [ExaCheck](https://github.com/exacheck/exacheck) works in conjunction with [ExaBGP](https://github.com/Exa-Networks/exabgp) to health check services and announce BGP routes depending on the state of the service.
 
-- [ExaCheck - ExaBGP Service Health Checker](#exacheck---exabgp-service-health-checker)
-  - [Why ExaCheck](#why-exacheck)
-    - [Features](#features)
-
-For additional information and configuration examples, please check the [ExaCheck website](https://exacheck.net).
+For additional information, deployment instructions and configuration examples please check the [ExaCheck website](https://exacheck.net).
 
 ## Why ExaCheck
 
@@ -23,5 +19,6 @@ Some features from the built in ExaBGP health checking script are **not** availa
 - Detailed logging available
 - Configuration validation (if using live configuration reloads, configuration is validated before application)
 - Out of the box sane defaults where possible
-- JSON schema of configuration (see [configuration.json](configuration.json) for the current schema)
+- JSON schema of configuration (see [schema.json][ExaCheck Configuration Schema] for the current schema)
 
+[ExaCheck Configuration Schema]: https://github.com/exacheck/exacheck/blob/main/schema.json
