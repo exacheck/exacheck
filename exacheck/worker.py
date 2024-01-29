@@ -381,8 +381,9 @@ class Worker:
         message = [
             f"Withdrawing routes for the health check as {reason}.",
             f"The following prefixes with the next hop address `{self.check.nexthop}` will be withdrawn:",
-            f"\n- {'\n- '.join([f'{prefix}' for prefix in self.check.prefixes])}",
         ]
+        for prefix in self.check.prefixes:
+            message.append(f"\n- {prefix}")
 
         # Send notification
         self.notifications.notify(

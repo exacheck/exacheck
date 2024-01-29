@@ -1,8 +1,12 @@
 ## Pending Release
 
-Fixes
+Fixes:
 
 - Replace static version definition in `__version__.py` with `importlib.metadata` lookup
+
+Features:
+
+- Add support for Python 3.11
 
 ## 2024-01-29 - 0.0.3
 
