@@ -6,4 +6,4 @@ ExaCheck - ExaBGP Health Checker
 Version information for the ExaCheck application.
 """
 
-__version__ = "0.0.3a0"
+__version__ = "0.0.3"
