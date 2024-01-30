@@ -2,7 +2,7 @@
 name = "exacheck"
 description = "ExaCheck - ExaBGP Health Checker"
 authors = ["Chris <info@exacheck.net>"]
-version = "0.0.5"
+version = "0.0.6"
 readme = "README.md"
 homepage = "https://exacheck.net"
 repository = "https://github.com/exacheck/exacheck"
