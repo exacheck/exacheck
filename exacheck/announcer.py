@@ -9,6 +9,7 @@ Manage the announcement and withdrawal of routes to ExaBGP
 from __future__ import annotations
 
 import re
+from sys import stdout
 from pprint import pformat
 from typing import Literal
 
@@ -99,6 +100,7 @@ class Announcer:
 
             # Send the command to ExaBGP
             print(route_string)
+            stdout.flush()
 
     def generate_routes(self, check: Check) -> list[str]:
         """Generate the route commands used by ExaBGP to announce/withdraw routes

@@ -1,7 +1,9 @@
 ---
 
-# Enable auto reload of configuration
-live_reload: true
+# Configure ExaCheck behaviour
+exacheck:
+  # Enable live reloads
+  live_reload: true
 
 # The list of health checks
 checks:

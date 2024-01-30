@@ -74,6 +74,7 @@ class Notifications:
         asset = apprise.AppriseAsset(
             app_id="ExaCheck",
             app_desc="ExaCheck - ExaBGP Health Checker",
+            app_url="https://exacheck.net"
         )
 
         # Create Apprise object

@@ -5,7 +5,7 @@ ARG PYTHON_VERSION=3.11
 FROM python:${PYTHON_VERSION}-slim
 
 # Set ExaCheck release to install
-ARG EXACHECK_VERSION=0.0.5
+ARG EXACHECK_VERSION=0.0.6
 
 # Set environment variables for Python
 ENV PYTHONDONTWRITEBYTECODE=x \
@@ -30,8 +30,7 @@ RUN useradd -Ms /bin/bash exabgp \
 USER exabgp
 
 # Set environment variables for ExaBGP
-ENV exabgp.daemon.user=exabgp \
-    exabgp.api.ack=false
+ENV exabgp.daemon.user=exabgp
 
 # Expose BGP port
 EXPOSE 179/tcp
