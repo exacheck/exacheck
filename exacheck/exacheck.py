@@ -22,7 +22,6 @@ from .exceptions.workerprocesserror import WorkerProcessError
 from .logmanager import LogManager
 from .procname import ProcName
 from .settings.check import Check
-from .settings.settings import Settings
 from .settings.sentry import Sentry
 from .notifications import Notifications
 from .sleeper import Sleeper
@@ -138,9 +137,9 @@ class ExaCheck:
         # Perform initial sleep
         self.log.bind(event="debug").debug(
             "Sleeping for {interval} seconds before monitoring loop starts",
-            interval=self.configuration.settings.monitoring_interval,
+            interval=self.configuration.settings.exacheck.monitoring_interval,
         )
-        sleep(self.configuration.settings.monitoring_interval)
+        sleep(self.configuration.settings.exacheck.monitoring_interval)
 
         # Run infinite loop
         while True:
@@ -149,7 +148,7 @@ class ExaCheck:
 
             # Create sleep object
             sleeper = Sleeper(
-                interval=self.configuration.settings.monitoring_interval,
+                interval=self.configuration.settings.exacheck.monitoring_interval,
                 log_context=self.log,
             )
 
@@ -195,7 +194,7 @@ class ExaCheck:
                     )
 
             # Check if live reloads are enabled
-            if self.configuration.settings.live_reload:
+            if self.configuration.settings.exacheck.live_reload:
                 # Start configuration file change test
                 self.log.bind(event="debug").trace(
                     "Testing if the configuration needs to be reloaded"

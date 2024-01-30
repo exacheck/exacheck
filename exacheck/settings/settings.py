@@ -10,11 +10,9 @@ from typing import Optional, Annotated, Union
 
 from pydantic import (
     Field,
-    FilePath,
     model_validator,
     field_validator,
-    PositiveInt,
-    PositiveFloat,
+    FilePath,
 )
 from pydantic_core.core_schema import ValidationInfo
 
@@ -23,6 +21,7 @@ from .check import Check
 from .loggers import LogFile, Syslog
 from .sentry import Sentry
 from .notifications import Notifications
+from .exacheck import ExaCheck
 
 
 # Set the available log types to allow the log type to be discriminated
@@ -41,19 +40,10 @@ class Settings(Base):
         default=None,
     )
 
-    live_reload: bool = Field(
-        title="Live Reload",
-        description="Automatically reload the configuration on any changes",
-        default=False,
-    )
-
-    monitoring_interval: PositiveInt | PositiveFloat = Field(
-        title="Monitoring Interval",
-        description=(
-            "The interval in seconds between checking the health of each check process/thread and looking for changes "
-            "to the configuration file"
-        ),
-        default=30,
+    exacheck: ExaCheck = Field(
+        title="ExaCheck Configuration",
+        description="ExaCheck internal options",
+        default=ExaCheck(),
     )
 
     checks: list[Check] = Field(

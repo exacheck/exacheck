@@ -8,4 +8,4 @@ Version information for the ExaCheck application.
 
 import importlib.metadata
 
-__version__ = importlib.metadata.version('exacheck')
+__version__ = importlib.metadata.version("exacheck")

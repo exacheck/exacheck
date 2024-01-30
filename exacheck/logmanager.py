@@ -243,8 +243,10 @@ class LogManager:
             fields.append(("line", "{line}"))
             fields.append(("function", "{function}"))
         else:
-            fields.append(("file", "{file.path}:{line}"))
-            fields.append(("function", "{function}"))
+            # If not using structured logging and the log level is debugging/trace, log the file and line number
+            if config.level in ["debug", "trace"]:
+                fields.append(("file", "{file.path}:{line}"))
+                fields.append(("function", "{function}"))
 
         # Append the event
         fields.append(("event", "{extra[event]}"))
