@@ -347,7 +347,7 @@ class Worker:
                 check=self.check.name,
                 log_context=self.log,
                 title=f"ExaCheck Event - Route Announcement - {self.check.name}",
-                message="<br><br>".join(message),
+                message="\n\n".join(message),
             )
 
     def withdraw(self) -> None:
@@ -391,7 +391,7 @@ class Worker:
             check=self.check.name,
             log_context=self.log,
             title=f"ExaCheck Event - Route Withdrawal - {self.check.name}",
-            message="<br><br>".join(message),
+            message="\n\n".join(message),
         )
 
     def cleanup(self, sig: int, frame: object) -> None:

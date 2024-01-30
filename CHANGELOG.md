@@ -4,6 +4,8 @@ Fixes:
 
 - Formatting fixup in `__version__.py`
 - Ensure STDOUT is flushed on route announce/withdraw
+- Define `app_url` for Apprise
+- Change line breaks for Apprise notification as they are broken in Slack
 
 Changes:
 
