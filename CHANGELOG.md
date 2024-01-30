@@ -1,3 +1,9 @@
+## UNRELEASED - 0.0.7
+
+Fixes:
+
+- Correct the logging event types for announce/withdraw of routes for log filtering to work correctly
+
 ## 2024-01-30 - 0.0.6
 
 Fixes:

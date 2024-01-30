@@ -178,8 +178,8 @@ class Worker:
         # Check if the route is currently advertised
         if state.advertised:
             # The route is already advertised, create new check state
-            self.log.bind(event="info").info(
-                "Health check successful and route is already advertised"
+            self.log.bind(event="debug").info(
+                "Health check successful and prefixes are already advertised"
             )
             self.check_state = CheckState(
                 state="up",
@@ -193,8 +193,8 @@ class Worker:
         # Check if the service has risen
         if state.rise and (state.rise + 1) >= self.check.rise:
             # Service is now risen, call function to announce route
-            self.log.bind(event="info").success(
-                "Health check successful and service has risen; route will be advertised"
+            self.log.bind(event="announce").success(
+                "Health check successful and service has risen; prefixes will be advertised"
             )
             self.announce()
             # Create the new check state
@@ -239,8 +239,8 @@ class Worker:
             # Check if the route is currently advertised
             if state.advertised:
                 # The state is advertised, withdraw the routes
-                self.log.bind(event="info").warning(
-                    "Service has been disabled; routes will be withdrawn"
+                self.log.bind(event="withdraw").warning(
+                    "Service has been disabled; prefixes will be withdrawn"
                 )
                 self.withdraw()
                 # Set the "since" date to now
@@ -263,8 +263,8 @@ class Worker:
         # Check if the route is currently advertised
         if not state.advertised:
             # The route is not advertised, create new check state
-            self.log.bind(event="info").info(
-                "Health check failure; route is not advertised"
+            self.log.bind(event="debug").info(
+                "Health check failure; prefixes are not advertised"
             )
             self.check_state = CheckState(
                 state="down",
@@ -279,8 +279,8 @@ class Worker:
         # Check if the service is falling
         if state.fall and (state.fall + 1) >= self.check.fall:
             # Service should now be considered down
-            self.log.bind(event="info").warning(
-                "Health check failure and service has fallen; route will be withdrawn"
+            self.log.bind(event="withdraw").warning(
+                "Health check failure and service has fallen; prefixes will be withdrawn"
             )
             # Withdraw the route
             self.withdraw()
@@ -338,8 +338,9 @@ class Worker:
             message = [
                 "Announcing routes for the health check as the service is marked as up.",
                 f"The following prefixes will be advertised with the next hop address `{self.check.nexthop}`:",
-                f"{chr(10)}- {f'{chr(10)}- '.join([f'{prefix}' for prefix in self.check.prefixes])}",
             ]
+            for prefix in self.check.prefixes:
+                message.append(f"\n- `{prefix}`")
 
             # Send notification
             self.notifications.notify(
@@ -383,7 +384,7 @@ class Worker:
             f"The following prefixes with the next hop address `{self.check.nexthop}` will be withdrawn:",
         ]
         for prefix in self.check.prefixes:
-            message.append(f"\n- {prefix}")
+            message.append(f"\n- `{prefix}`")
 
         # Send notification
         self.notifications.notify(
