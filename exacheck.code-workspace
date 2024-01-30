@@ -47,6 +47,7 @@
       "logsettings",
       "loguru",
       "nbytes",
+      "neighbor",
       "nexthop",
       "nosemgrep",
       "NOSONAR",
