@@ -4,6 +4,14 @@ Fixes:
 
 - Correct the logging event types for announce/withdraw of routes for log filtering to work correctly
 
+Features:
+
+- Add the following options for Sentry; values are set to the Sentry defaults:
+  - `attach_stacktrace`
+  - `include_local_variables`
+  - `debug`
+- Move Sentry profile sample rate out of experimental configuration
+
 ## 2024-01-30 - 0.0.6
 
 Fixes:
