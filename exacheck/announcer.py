@@ -89,7 +89,7 @@ class Announcer:
         # Loop over each route
         for route in self.routes:
             # Format the route with command and MED/metric
-            route_string = route.format(command=command, med=med)
+            route_string = route.format(command=command, metric=med)
 
             # Log the command being sent
             if not silent:
@@ -99,8 +99,16 @@ class Announcer:
                 )
 
             # Send the command to ExaBGP
-            print(route_string)
-            stdout.flush()
+            try:
+                print(route_string)
+                stdout.flush()
+            except Exception as exc:
+                # Log the error sending the command
+                if not silent:
+                    self.log.bind(event="error").error(
+                        "Error sending command to ExaBGP: {exc}",
+                        exc=exc,
+                    )
 
     def generate_routes(self, check: Check) -> list[str]:
         """Generate the route commands used by ExaBGP to announce/withdraw routes

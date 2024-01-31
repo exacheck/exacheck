@@ -15,6 +15,7 @@ from time import sleep
 from typing import Tuple, cast
 from signal import signal, SIGTERM, SIGINT
 import sys
+import importlib.metadata
 
 from loguru import logger
 
@@ -322,11 +323,13 @@ class ExaCheck:
             sentry_sdk.init(
                 dsn=cast(
                     str, self.configuration.settings.sentry.dsn
-                ),  # pylint: disable=no-member
-                traces_sample_rate=self.configuration.settings.sentry.sample_rate,  # pylint: disable=no-member
-                _experiments={
-                    "profiles_sample_rate": self.configuration.settings.sentry.profiles_sample_rate,  # pylint: disable=no-member
-                },
+                ),
+                release=f"exacheck@{importlib.metadata.version('exacheck')}",
+                attach_stacktrace=self.configuration.settings.sentry.attach_stacktrace,
+                include_local_variables=self.configuration.settings.sentry.include_local_variables,
+                debug=self.configuration.settings.sentry.debug,
+                traces_sample_rate=self.configuration.settings.sentry.sample_rate,
+                profiles_sample_rate=self.configuration.settings.sentry.profiles_sample_rate,
             )
         except ImportError:
             self.log.bind(event="error").error(

@@ -1,3 +1,25 @@
+## 2024-01-31 - 0.0.7
+
+Fixes:
+
+- Correct the logging event types for announce/withdraw of routes for log filtering to work correctly
+- Fix metric attribute naming error
+
+Changes:
+
+- Log exceptions when sending routes to ExaBGP
+- Update syslog format string
+  - Include hostname when logging to remote servers
+  - Include timestamp when logging to remote servers or when structured logging is used
+
+Features:
+
+- Add the following options for Sentry; values are set to the Sentry defaults:
+  - `attach_stacktrace`
+  - `include_local_variables`
+  - `debug`
+- Move Sentry profile sample rate out of experimental configuration
+
 ## 2024-01-30 - 0.0.6
 
 Fixes:

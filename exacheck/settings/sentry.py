@@ -40,3 +40,21 @@ class Sentry(Base):
         default=0.0,
         ge=0.0,
     )
+
+    attach_stacktrace: bool = Field(
+        title="Attach Stacktrace",
+        description="If Sentry should attach a stacktrace to all messages logged (not only exceptions)",
+        default=False,
+    )
+
+    include_local_variables: bool = Field(
+        title="Include Local Variables",
+        description="If Sentry should capture and send local variables to send with events",
+        default=True,
+    )
+
+    debug: bool = Field(
+        title="Debug",
+        description="Enable debugging mode for Sentry",
+        default=False,
+    )

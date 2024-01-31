@@ -554,7 +554,7 @@
                     "title": "HTTP Timeout"
                 },
                 "user_agent": {
-                    "default": "ExaCheck HTTP Health Check [v0.0.5]",
+                    "default": "ExaCheck HTTP Health Check [v0.0.7]",
                     "description": "The user agent to send with the HTTP request",
                     "title": "User Agent",
                     "type": "string"
@@ -1164,6 +1164,24 @@
                     "minimum": 0.0,
                     "title": "Profile Sample Rate",
                     "type": "number"
+                },
+                "attach_stacktrace": {
+                    "default": false,
+                    "description": "If Sentry should attach a stacktrace to all messages logged (not only exceptions)",
+                    "title": "Attach Stacktrace",
+                    "type": "boolean"
+                },
+                "include_local_variables": {
+                    "default": true,
+                    "description": "If Sentry should capture and send local variables to send with events",
+                    "title": "Include Local Variables",
+                    "type": "boolean"
+                },
+                "debug": {
+                    "default": false,
+                    "description": "Enable debugging mode for Sentry",
+                    "title": "Debug",
+                    "type": "boolean"
                 }
             },
             "required": [

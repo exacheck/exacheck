@@ -5,7 +5,7 @@ ARG PYTHON_VERSION=3.11
 FROM python:${PYTHON_VERSION}-slim
 
 # Set ExaCheck release to install
-ARG EXACHECK_VERSION=0.0.6
+ARG EXACHECK_VERSION=0.0.7
 
 # Set environment variables for Python
 ENV PYTHONDONTWRITEBYTECODE=x \
