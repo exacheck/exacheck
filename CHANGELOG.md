@@ -7,6 +7,9 @@ Fixes:
 Changes:
 
 - Log exceptions when sending routes to ExaBGP
+- Update syslog format string
+  - Include hostname when logging to remote servers
+  - Include timestamp when logging to remote servers or when structured logging is used
 
 Features:
 

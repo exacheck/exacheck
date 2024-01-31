@@ -13,7 +13,7 @@ import logging.handlers
 from pathlib import PosixPath
 from sys import stderr
 from typing import Callable
-from socket import SOCK_STREAM, SOCK_DGRAM
+from socket import SOCK_STREAM, SOCK_DGRAM, gethostname
 
 import loguru
 from loguru._defaults import (
@@ -226,6 +226,17 @@ class LogManager:
                 fields.append(("time", "{time:HH:mm:ss.SSS}"))
             else:
                 fields.append(("time", "{time:YYYY-MM-DD HH:mm:ss.SSS}"))
+
+        # Check if logging with syslog
+        if isinstance(config, Syslog):
+
+            # If using structured logging or logging to a remote server, include a time field
+            if config.structured or isinstance(config.destination, str):
+                fields.append(("time", "{time:YYYY-MM-DD HH:mm:ss.SSS}"))
+
+            # If logging to a remote server, include the hostname
+            if isinstance(config.destination, str):
+                fields.append(("hostname", f"{gethostname()}"))
 
         # Define the log level field
         if config.structured:
