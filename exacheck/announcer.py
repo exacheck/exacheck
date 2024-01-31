@@ -89,7 +89,7 @@ class Announcer:
         # Loop over each route
         for route in self.routes:
             # Format the route with command and MED/metric
-            route_string = route.format(command=command, med=med)
+            route_string = route.format(command=command, metric=med)
 
             # Log the command being sent
             if not silent:

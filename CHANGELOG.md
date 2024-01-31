@@ -3,6 +3,7 @@
 Fixes:
 
 - Correct the logging event types for announce/withdraw of routes for log filtering to work correctly
+- Fix metric attribute naming error
 
 Changes:
 

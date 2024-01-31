@@ -332,7 +332,7 @@ class Worker:
             self.log.bind(event="debug").debug(
                 "Health check route is not advertised yet; announcing route"
             )
-            self.announcer.announce()
+            self.announcer.announce(metric=self.check.metric)
 
             # Create the message for notification
             message = [
@@ -370,7 +370,7 @@ class Worker:
         self.log.bind(event="debug").debug(
             "Health check route is advertised; withdrawing route"
         )
-        self.announcer.withdraw()
+        self.announcer.withdraw(metric=self.check.metric)
 
         # Get the reason why the route is being withdrawn (disabled or down)
         if self.check_state.state == "disabled":
@@ -404,7 +404,7 @@ class Worker:
         """
         # Withdraw all routes if currently advertised
         if self.check_state.advertised:
-            self.announcer.withdraw(silent=True)
+            self.announcer.withdraw(metric=self.check.metric, silent=True)
 
         # Finish
         sys.exit(0)
