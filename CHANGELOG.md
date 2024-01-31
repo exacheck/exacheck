@@ -4,6 +4,10 @@ Fixes:
 
 - Correct the logging event types for announce/withdraw of routes for log filtering to work correctly
 
+Changes:
+
+- Log exceptions when sending routes to ExaBGP
+
 Features:
 
 - Add the following options for Sentry; values are set to the Sentry defaults:
