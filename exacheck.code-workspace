@@ -28,6 +28,7 @@
       "exacheck",
       "fileargs",
       "gaierror",
+      "gethostname",
       "getprotobyname",
       "healthcheck",
       "Hostnames",
