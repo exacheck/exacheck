@@ -1,4 +1,4 @@
-## PENDING RELEASE - 0.0.8
+## 2024-02-07 - 0.0.8
 
 Fixes:
 
