@@ -202,6 +202,7 @@ class LogManager:
                 compression=compression,
                 enqueue=True,
                 filter=log_filter,
+                retention=config.count,
             )
 
         # Set the logger ID for the config
