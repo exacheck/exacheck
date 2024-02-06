@@ -2,7 +2,8 @@
 
 Fixes:
 
-- Log file `count` option was not being used at all; log files would rotate but never be cleaned up.
+- Log file `count` option was not being used at all; log files would rotate but never be cleaned up
+- If a `host` value was provided for the `http` check method the value was being ignored; the host was overwritten from the hostname in URL
 
 ## 2024-01-31 - 0.0.7
 

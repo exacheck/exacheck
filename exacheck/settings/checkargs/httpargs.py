@@ -169,7 +169,7 @@ class HTTPArgs(Remote):
             return values
 
         # Skip if a host value was provided
-        if "host" in values and values["host"] is None:
+        if "host" in values and values["host"] is not None:
             return values
 
         # Attempt to parse the URL
