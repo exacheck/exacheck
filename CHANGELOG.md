@@ -1,3 +1,9 @@
+## PENDING RELEASE - 0.0.8
+
+Fixes:
+
+- Log file `count` option was not being used at all; log files would rotate but never be cleaned up.
+
 ## 2024-01-31 - 0.0.7
 
 Fixes:
