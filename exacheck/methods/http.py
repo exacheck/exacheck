@@ -8,7 +8,7 @@ Check Method - HTTP
 
 import warnings
 from pprint import pformat
-from ipaddress import ip_address
+from ipaddress import ip_address, IPv6Address
 
 import requests
 
@@ -190,6 +190,10 @@ class HTTP(Remote):
             path = self.args.url.path
         else:
             path = "/"
+
+        # If the IP address to test is an IPv6 IP, enclose it with square brackets
+        if isinstance(ip_address(addr), IPv6Address):
+            addr = f"[{addr}]"
 
         # Generate the URL
         url = template.format(
