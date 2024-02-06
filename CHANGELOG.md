@@ -1,3 +1,9 @@
+## PENDING RELEASE - 0.0.9
+
+Fixes:
+
+- `http` check method fails to parse the URL correctly for IPv6 hosts; IPv6 address must be enclosed with `[]`
+
 ## 2024-02-07 - 0.0.8
 
 Fixes:
