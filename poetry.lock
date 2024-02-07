@@ -41,6 +41,9 @@ files = [
     {file = "astroid-3.0.3.tar.gz", hash = "sha256:4148645659b08b70d72460ed1921158027a9e53ae8b7234149b1400eddacbb93"},
 ]
 
+[package.dependencies]
+typing-extensions = {version = ">=4.0.0", markers = "python_version < \"3.11\""}
+
 [[package]]
 name = "asttokens"
 version = "2.4.1"
@@ -91,6 +94,7 @@ files = [
 
 [package.dependencies]
 pycodestyle = ">=2.10.0"
+tomli = {version = "*", markers = "python_version < \"3.11\""}
 
 [[package]]
 name = "black"
@@ -129,6 +133,8 @@ mypy-extensions = ">=0.4.3"
 packaging = ">=22.0"
 pathspec = ">=0.9.0"
 platformdirs = ">=2"
+tomli = {version = ">=1.1.0", markers = "python_version < \"3.11\""}
+typing-extensions = {version = ">=4.0.1", markers = "python_version < \"3.11\""}
 
 [package.extras]
 colorama = ["colorama (>=0.4.3)"]
@@ -492,6 +498,24 @@ files = [
 setuptools = "*"
 
 [[package]]
+name = "exabgp"
+version = "4.2.21"
+description = "BGP swiss army knife"
+optional = false
+python-versions = "*"
+files = []
+develop = false
+
+[package.dependencies]
+setuptools = "*"
+
+[package.source]
+type = "git"
+url = "https://github.com/Exa-Networks/exabgp.git"
+reference = "4.2"
+resolved_reference = "0659057837cd6c6351579e9f0fa47e9fb7de7311"
+
+[[package]]
 name = "exceptiongroup"
 version = "1.2.0"
 description = "Backport of PEP 654 (exception groups)"
@@ -599,6 +623,7 @@ files = [
 attrs = ">=22.2.0"
 black = {version = ">=19.10b0", optional = true, markers = "extra == \"cli\""}
 click = {version = ">=7.0", optional = true, markers = "extra == \"cli\""}
+exceptiongroup = {version = ">=1.0.0", markers = "python_version < \"3.11\""}
 rich = {version = ">=9.0.0", optional = true, markers = "extra == \"cli\""}
 sortedcontainers = ">=2.1.0,<3.0.0"
 
@@ -678,6 +703,7 @@ files = [
 [package.dependencies]
 colorama = {version = "*", markers = "sys_platform == \"win32\""}
 decorator = "*"
+exceptiongroup = {version = "*", markers = "python_version < \"3.11\""}
 jedi = ">=0.16"
 matplotlib-inline = "*"
 pexpect = {version = ">4.3", markers = "sys_platform != \"win32\""}
@@ -1052,6 +1078,7 @@ files = [
 
 [package.dependencies]
 mypy-extensions = ">=1.0.0"
+tomli = {version = ">=1.1.0", markers = "python_version < \"3.11\""}
 typing-extensions = ">=4.1.0"
 
 [package.extras]
@@ -1437,10 +1464,15 @@ files = [
 [package.dependencies]
 astroid = ">=3.0.1,<=3.1.0-dev0"
 colorama = {version = ">=0.4.5", markers = "sys_platform == \"win32\""}
-dill = {version = ">=0.3.6", markers = "python_version >= \"3.11\""}
+dill = [
+    {version = ">=0.2", markers = "python_version < \"3.11\""},
+    {version = ">=0.3.6", markers = "python_version >= \"3.11\" and python_version < \"3.12\""},
+    {version = ">=0.3.7", markers = "python_version >= \"3.12\""},
+]
 isort = ">=4.2.5,<5.13.0 || >5.13.0,<6"
 mccabe = ">=0.6,<0.8"
 platformdirs = ">=2.2.0"
+tomli = {version = ">=1.1.0", markers = "python_version < \"3.11\""}
 tomlkit = ">=0.10.1"
 
 [package.extras]
@@ -1528,9 +1560,11 @@ files = [
 
 [package.dependencies]
 colorama = {version = "*", markers = "sys_platform == \"win32\""}
+exceptiongroup = {version = ">=1.0.0rc8", markers = "python_version < \"3.11\""}
 iniconfig = "*"
 packaging = "*"
 pluggy = ">=1.3.0,<2.0"
+tomli = {version = ">=1.0.0", markers = "python_version < \"3.11\""}
 
 [package.extras]
 testing = ["argcomplete", "attrs (>=19.2.0)", "hypothesis (>=3.56)", "mock", "nose", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
@@ -2464,5 +2498,5 @@ sentry = ["sentry-sdk"]
 
 [metadata]
 lock-version = "2.0"
-python-versions = "~3.11"
-content-hash = "0c6fd82c8361c9f66234e1dc44316748e458da74bf92620d4a6d122097d1f024"
+python-versions = ">=3.10,<3.13"
+content-hash = "08dd5e85244604490642f0e5f3a77dbe33d182abe9ea859284bb8d976ce56b9d"

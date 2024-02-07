@@ -1,5 +1,10 @@
 ## PENDING - 0.0.10
 
+Changes:
+
+- Add support for Python 3.10 and Python 3.12
+  - ExaBGP will be built from source if using Python 3.12 (using the 4.2 branch)
+
 Misc:
 
 - Update semgrep and pydantic releases

@@ -16,11 +16,19 @@ exacheck = 'exacheck.cli:cli'
 
 [tool.poetry.dependencies]
 # Python version required
-python = "~3.11"
+python = ">=3.10,<3.13"
 
-# Main requirements
+# ExaBGP itself
+exabgp = [
+  # If using Python <3.11, ExaBGP can be installed from PyPI without issues
+  {version = "^4.2.21", python = "<=3.11"},
+  # If using Python 3.12 or higher, ExaBGP needs to be build from source due to the following error when running ExaBGP:
+  #   ModuleNotFoundError: No module named 'exabgp.vendoring.six.moves'
+  {git = "https://github.com/Exa-Networks/exabgp.git", branch = "4.2", python = ">=3.12"},
+]
+
+# General ExaCheck requirements
 apprise = "^1.7.2"
-exabgp = "^4.2.21"
 loguru = "^0.7.2"
 pydantic = "^2.6.1"
 pyyaml = "^6.0.1"
@@ -28,13 +36,13 @@ setproctitle = "^1.3.3"
 tabulate = "^0.9.0"
 ujson = "^5.9.0"
 
-# For health checks
+# Requirements for the built in health checks
 dnspython = "^2.5.0"
 icmplib = "^3.0.4"
 ntplib = "^0.4.0"
 requests = "^2.31.0"
 
-# For use with CLI scripts
+# For the CLI
 click = "^8.1.7"
 
 # For Sentry support; optional
@@ -48,7 +56,17 @@ full = [
   "sentry-sdk",
 ]
 
+# Declare the below groups as optional
 [tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.format]
+optional = true
+
+[tool.poetry.group.test]
+optional = true
+
+[tool.poetry.group.typing]
 optional = true
 
 [tool.poetry.group.dev.dependencies]
@@ -66,16 +84,6 @@ ipython = "^8.21.0"
 Markdown = "^3.5.2"
 pipenv = "^2023.12.1"
 rich = "^13.7.0"
-
-# Declare the below groups as optional
-[tool.poetry.group.format]
-optional = true
-
-[tool.poetry.group.test]
-optional = true
-
-[tool.poetry.group.typing]
-optional = true
 
 # Define the packages for the optional groups
 [tool.poetry.group.format.dependencies]
