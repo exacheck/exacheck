@@ -21,7 +21,7 @@ RUN useradd -Ms /bin/bash exabgp \
     && chmod 600 /run/exabgp.in /run/exabgp.out
 
 # Set ExaCheck tag/branch to install
-ARG EXACHECK_VERSION=v0.0.9
+ARG EXACHECK_VERSION=v0.0.10
 
 # Set path to the git repository for ExaCheck
 ARG EXACHECK_REPOSITORY=https://github.com/exacheck/exacheck.git
