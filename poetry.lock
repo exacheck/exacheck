@@ -2465,4 +2465,4 @@ sentry = ["sentry-sdk"]
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.11"
-content-hash = "913c02531c167a68d72f8ed8387d4865c4caee0cb59bd73ccfda921497c2994d"
+content-hash = "0c6fd82c8361c9f66234e1dc44316748e458da74bf92620d4a6d122097d1f024"
