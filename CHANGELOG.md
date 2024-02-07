@@ -4,6 +4,9 @@ Changes:
 
 - Add support for Python 3.10 and Python 3.12
   - ExaBGP will be built from source if using Python 3.12 (using the 4.2 branch)
+- Dockerfile changes to add support for Python 3.12:
+  - Install ExaCheck from git rather than PyPi to allow easier version customisation
+  - Make sure wheel/setuptools/pip is up to date
 
 Misc:
 

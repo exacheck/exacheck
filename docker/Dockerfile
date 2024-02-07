@@ -4,9 +4,6 @@ ARG PYTHON_VERSION=3.11
 # Use Python image
 FROM python:${PYTHON_VERSION}-slim
 
-# Set ExaCheck release to install
-ARG EXACHECK_VERSION=0.0.9
-
 # Set environment variables for Python
 ENV PYTHONDONTWRITEBYTECODE=x \
     PYTHONUNBUFFERED=1 \
@@ -17,14 +14,37 @@ ENV PIP_DEFAULT_TIMEOUT=100 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=off
 
-# Install ExaCheck and requirements
-RUN python3 -m pip --no-cache-dir install dumb-init exacheck==${EXACHECK_VERSION}
-
 # Add ExaBGP user and setup permissions
 RUN useradd -Ms /bin/bash exabgp \
     && mkfifo /run/exabgp.in /run/exabgp.out \
     && chown -R exabgp:exabgp /run/exabgp.in /run/exabgp.out \
     && chmod 600 /run/exabgp.in /run/exabgp.out
+
+# Set ExaCheck tag/branch to install
+ARG EXACHECK_VERSION=v0.0.9
+
+# Set path to the git repository for ExaCheck
+ARG EXACHECK_REPOSITORY=https://github.com/exacheck/exacheck.git
+
+# Install requirements and ExaCheck
+RUN apt-get update \
+    # Install git to clone ExaCheck
+    && apt-get install -y --no-install-recommends \
+        git \
+    # Upgrade pip, wheel and setuptools
+    && python3 -m pip --no-cache-dir install --upgrade \
+        pip \
+        setuptools \
+        wheel \
+    # Install dumb-init/ExaCheck
+    && python3 -m pip --no-cache-dir install \
+        dumb-init \
+        "git+${EXACHECK_REPOSITORY}@${EXACHECK_VERSION}" \
+    # Remove git and clean up
+    && apt-get remove -y git \
+    && apt-get --purge autoremove -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Switch to ExaBGP user
 USER exabgp
