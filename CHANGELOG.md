@@ -1,3 +1,10 @@
+## PENDING - 0.0.10
+
+Misc:
+
+- Update semgrep and pydantic releases
+- Remove requirement on types-requests; this is not needed for production usage
+
 ## 2024-02-07 - 0.0.9
 
 Fixes:
