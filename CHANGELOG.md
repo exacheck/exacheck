@@ -1,3 +1,19 @@
+## 2024-02-08 - 0.0.10
+
+Changes:
+
+- Add support for Python 3.10 and Python 3.12
+  - ExaBGP will be built from source if using Python 3.12 (using the 4.2 branch)
+- Dockerfile changes to add support for Python 3.12:
+  - Install ExaCheck from git rather than PyPi to allow easier version customisation
+  - Make sure wheel/setuptools/pip is up to date
+
+Misc:
+
+- Update semgrep and pydantic releases
+- Remove requirement on types-requests; this is not needed for production usage
+- Re-format pyproject.toml - use groups for development/typing/formatting/testing
+
 ## 2024-02-07 - 0.0.9
 
 Fixes:

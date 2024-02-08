@@ -23,7 +23,7 @@ cd /code
 conda activate exacheck
 
 # Install requirements with poetry
-poetry install --no-interaction --all-extras
+poetry install --no-interaction --all-extras --with dev,format,test,typing
 
 echo "----------------------------------------------------------------------------"
 echo "Python requirements installed"
