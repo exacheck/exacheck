@@ -1,7 +1,29 @@
 [tool.poetry]
 authors = ["Chris <info@exacheck.net>"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Framework :: Pydantic :: 2",
+  "Intended Audience :: Information Technology",
+  "Intended Audience :: System Administrators",
+  "Topic :: System :: Monitoring",
+  "Topic :: System :: Networking :: Monitoring",
+  "Topic :: System :: Networking",
+]
 description = "ExaCheck - ExaBGP Health Checker"
+documentation = "https://exacheck.net/deployment/"
 homepage = "https://exacheck.net"
+keywords = [
+  "bgp",
+  "exabgp",
+  "healthcheck",
+  "monitoring",
+  "network",
+  "networking",
+  "networks",
+  "routes",
+  "routing",
+]
 name = "exacheck"
 readme = "README.md"
 repository = "https://github.com/exacheck/exacheck"
@@ -10,6 +32,11 @@ version = "0.0.10"
 [build-system]
 build-backend = "poetry.core.masonry.api"
 requires = ["poetry-core>=1.0.0"]
+
+[tool.poetry.urls]
+"Changelog" = "https://exacheck.net/development/changelog/"
+"Configuration" = "https://exacheck.net/configuration/"
+"Docker Deployment" = "https://exacheck.net/deployment/docker/"
 
 [tool.poetry.scripts]
 exacheck = 'exacheck.cli:cli'
