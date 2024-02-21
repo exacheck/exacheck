@@ -1,3 +1,9 @@
+## UNRELEASED - 0.0.11
+
+Misc:
+
+- Update Sentry and dnspython releases
+
 ## 2024-02-08 - 0.0.10
 
 Changes:
