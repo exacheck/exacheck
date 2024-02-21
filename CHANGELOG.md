@@ -1,4 +1,8 @@
-## UNRELEASED - 0.0.11
+## 2024-02-21 - 0.0.11
+
+Fixes:
+
+- Reap zombie processes and respawn on failure (fixes [#8](https://github.com/exacheck/exacheck/issues/8))
 
 Misc:
 
