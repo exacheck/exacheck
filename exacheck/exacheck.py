@@ -8,12 +8,14 @@ Main ExaCheck class
 
 from __future__ import annotations
 
+from errno import ECHILD
 from multiprocessing import Process
+from os import waitpid, WNOHANG, kill
 from pathlib import Path
 from pprint import pformat
 from time import sleep
 from typing import Tuple, cast
-from signal import signal, SIGTERM, SIGINT
+from signal import signal, SIGTERM, SIGINT, SIGCHLD
 import sys
 import importlib.metadata
 
@@ -113,6 +115,9 @@ class ExaCheck:
         # Set process name
         self.procname.update(message="Starting workers")
 
+        # Create signal handler to handle zombie processes
+        signal(SIGCHLD, self._reap)
+
         # Create jobs
         self.jobs = self._start_processes()
 
@@ -161,8 +166,19 @@ class ExaCheck:
                 "Looping over each worker to ensure it is alive"
             )
             for job in self.jobs:
+                # Get the PID of the job
+                pid = job[1].pid
+
+                # Make sure the PID exists/is running
+                try:
+                    kill(pid, 0)
+                except Exception:
+                    running = False
+                else:
+                    running = True
+
                 # Ensure that the job is still alive
-                if job[1].is_alive():
+                if job[1].is_alive() and running:
                     # Worker is alive; log it
                     self.log.bind(event="debug").trace(
                         "Worker '{job_name}' is alive", job_name=job[0].name
@@ -219,6 +235,12 @@ class ExaCheck:
                 self.log.bind(event="debug").trace(
                     "Live configuration reload disabled; not checking for modifications"
                 )
+
+            # Call waitpid in case of zombie processes hanging around
+            try:
+                waitpid(-1, WNOHANG)
+            except Exception:
+                pass
 
             # Finish the sleep timer
             sleeper.finish()
@@ -511,3 +533,68 @@ class ExaCheck:
             "Check worker for '{name}' has been stopped",
             name=check.name,
         )
+
+    def _reap(self, signum, frame) -> None:
+        """Handly SIGCHLD signals to reap zombie processes"""
+        # Logging
+        self.log.bind(event="debug").info(
+            "Received SIGCHLD; reaping zombie processes"
+        )
+
+        try:
+            # Run in loop to catch any processes
+            while True:
+                # Run waitpid for process
+                pid, status = waitpid(-1, WNOHANG)
+                # Check if this is the main process
+                if pid == 0:
+                    # No more processes to reap
+                    self.log.bind(event="debug").debug(
+                        "Finished reaping processes"
+                    )
+                    break
+
+                # Get the exit code of process
+                code = status >> 8
+
+                # Log information about it
+                self.log.bind(event="debug").info(
+                    "Reaped process {pid} with exit code {code}",
+                    pid=pid,
+                    code=code,
+                )
+
+                # Respawn the check
+                for check, worker in self.jobs:
+                    if worker.pid == pid:
+                        self.log.bind(event="info").info(
+                            "Worker '{check_name}' has exited; it will be respawned",
+                            check_name=check.name,
+                        )
+
+                        # Create the new worker process
+                        new_worker = self._create_process(check=check)
+
+                        # Start the new worker
+                        new_worker.start()
+
+                        # Replace the job with the new one
+                        self.jobs[self.jobs.index((check, worker))] = (check, new_worker)
+
+                        # Send notification
+                        self.notifications.notify(
+                            event="error",
+                            title=f"ExaCheck Worker Failure - {check.name}",
+                            message=f"The ExaCheck worker process for the health check `{check.name}` failed and has now been respawned.",
+                        )
+
+        except OSError as exc:
+            if exc.errno == ECHILD:
+                self.log.bind(event="info").info(
+                    "No child processes to reap"
+                )
+            else:
+                self.log.bind(event="error").error(
+                    "Error reaping processes: {exc}",
+                    exc=exc,
+                )
