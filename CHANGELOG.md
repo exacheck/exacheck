@@ -1,6 +1,9 @@
 ## PENDING - 0.1.0
 
+Misc:
 
+- Update Sentry, Apprise and Pydantic releases
+- Update development group dependency Markdown
 
 ## 2024-02-21 - 0.0.11
 
