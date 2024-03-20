@@ -67,7 +67,7 @@ ujson = "^5.9.0"
 dnspython = "^2.6.1"
 icmplib = "^3.0.4"
 ntplib = "^0.4.0"
-requests = "^2.31.0"
+httpx = {extras = ["http2"], version = "^0.27.0"}
 
 # For the CLI
 click = "^8.1.7"

@@ -620,6 +620,12 @@
                     "default": null,
                     "description": "The request data to send for POST requests",
                     "title": "Request Data"
+                },
+                "http2": {
+                    "default": false,
+                    "description": "Enable the HTTP/2 protocol for the request",
+                    "title": "Enable HTTP/2",
+                    "type": "boolean"
                 }
             },
             "required": [

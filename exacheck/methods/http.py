@@ -10,11 +10,10 @@ import warnings
 from pprint import pformat
 from ipaddress import ip_address, IPv6Address
 
-import requests
+import httpx
 
 from ..checkresult import CheckResult
 from ..settings.checkargs.httpargs import HTTPArgs
-from .http_extra import SNIAdapter
 from ._remote import Remote
 
 
@@ -30,12 +29,15 @@ class HTTP(Remote):
         # Set type for MyPy
         self.args: HTTPArgs
 
-        # Create the HTTP/S client session
-        session = self._create_session()
-
         # Send the HTTP request and get response
         try:
-            response = self._request(session=session, addr=addr)
+            response = self._request(addr=addr)
+        except httpx.ConnectError as exc:
+            return CheckResult(
+                success=False,
+                message="HTTP request connection error",
+                error=f"Connection error to {addr}: {exc}",
+            )
         except Exception as exc:
             return CheckResult(success=False, message=f"HTTP request failed: {exc}")
 
@@ -45,7 +47,7 @@ class HTTP(Remote):
         # Return the check result
         return result
 
-    def _validate(self, response: requests.Response) -> CheckResult:
+    def _validate(self, response: httpx.Response) -> CheckResult:
         """
         Validate the HTTP response received
         """
@@ -66,7 +68,7 @@ class HTTP(Remote):
         # Check if a successful response code is required; if so validate it matches
         if (
             self.args.require_status
-            and response.status_code != requests.codes.ok  # pylint: disable=no-member
+            and response.status_code != httpx.codes.OK
         ):
             return CheckResult(
                 success=False,
@@ -89,54 +91,47 @@ class HTTP(Remote):
             output=f"HTTP response received in {response.elapsed.total_seconds():.3f} seconds",
         )
 
-    def _request(self, session: requests.Session, addr: str) -> requests.Response:
+    def _request(self, addr: str) -> httpx.Response:
         """
         Send the HTTP request and return the response
         """
         # Get the URL to make request to
         url = self._create_url(addr=addr)
 
-        # Disable SSL warning if not verifying certificate
-        if self.args.url.scheme == "https" and not self.args.verify_ssl:
-            warnings.filterwarnings("ignore", message="Unverified HTTPS request")
-
-        # Send the request of the specified type
-        response = getattr(session, self.args.request_method.lower())(
-            url=url,
-            timeout=self.args.http_timeout,
-            params=self.args.url.query,
-            data=self.args.data,
-        )
-
-        # Return the response
-        return response
-
-    def _create_session(self) -> requests.Session:
-        """
-        Create the HTTP/S client session
-        """
-        # Create the client session
-        session = requests.Session()
-
         # Create the headers for the request
         headers = self._create_headers()
 
-        # Check if the URL is HTTPS and if the request is to a hostname
-        if self.args.url.scheme == "https" and "Host" in headers:
-            # Mount the SNI adapter for SNI support
-            session.mount("https://", SNIAdapter())
+        # Set up authentication if required
+        authentication = self._create_auth()
 
-        # Set the headers from "headers"
-        session.headers.update(headers)
+        # Get any extensions required
+        extensions = self._create_extensions()
 
-        # Set basic auth credentials if required
-        if self.args.url.username and self.args.url.password:
-            session.auth = (self.args.url.username, self.args.url.password)
+        # Send the request of the appropriate type
+        with httpx.Client(
+            headers=headers,
+            verify=self.args.verify_ssl,
+            http2=self.args.http2,
+            timeout=self.args.http_timeout,
+            auth=authentication,
+        ) as client:
+            # If the request is a GET request, no data can be included
+            if self.args.request_method.lower() == "get":
+                response = client.get(
+                    url=url,
+                    params=self.args.url.query,
+                    extensions=extensions,
+                )
+            else:
+                response = getattr(client, self.args.request_method.lower())(
+                    url=url,
+                    params=self.args.url.query,
+                    data=self.args.data,
+                    extensions=extensions,
+                )
 
-        # Set the SSL verification option if required
-        session.verify = self.args.verify_ssl
-
-        return session
+        # Return the response
+        return response
 
     def _create_headers(self) -> dict[str, str]:
         """
@@ -208,6 +203,45 @@ class HTTP(Remote):
 
         # Return the URL
         return url
+
+    def _create_auth(self) -> tuple[str, str] | None:
+        """
+        Set up a HTTP basic authentication object if required
+        """
+        # Only proceed if the username and password are set
+        if self.args.url.username and self.args.url.password:
+            # Return tuple of username/password
+            return (self.args.url.username, self.args.url.password)
+
+        # No auth configured
+        return None
+
+    def _create_extensions(self) -> dict[str, str] | None:
+        """
+        Set up any extensions required for the HTTP request
+
+        Currently this only configures SNI if required but this may be extended in future
+        """
+        # If the scheme is not HTTPS, skip
+        if self.args.url.scheme != "https":
+            return None
+
+        # If there is no host available, skip
+        if not self.args.url.host:
+            return None
+
+        # If the host is an IP address, skip
+        if self._is_ip(self.args.url.host):
+            return None
+
+        # Create empty dict of extensions
+        extensions: dict[str, str] = {}
+
+        # Set up the SNI extension
+        extensions["sni"] = self.args.url.host
+
+        # Return the extensions
+        return extensions
 
     # Check if the supplied value is an IP address
     @staticmethod
