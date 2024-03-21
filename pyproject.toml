@@ -99,40 +99,40 @@ optional = true
 [tool.poetry.group.dev.dependencies]
 # Packages for linting
 pycodestyle = "^2.11.1"
-pylint = "^3.0.3"
+pylint = "^3.1.0"
 pylint-pydantic = "^0.3.2"
-ruff = "^0.1.15"
-semgrep = "^1.59.1"
+ruff = "^0.3.3"
+semgrep = "^1.66.0"
 
 # Misc other development tools
-Cython = "^3.0.8"
+Cython = "^3.0.9"
 devtools = {extras = ["pygments"], version = "^0.12.2"}
-ipython = "^8.21.0"
+ipython = "^8.22.2"
 Markdown = "^3.6"
 pipenv = "^2023.12.1"
-rich = "^13.7.0"
+rich = "^13.7.1"
 
 # Define the packages for the optional groups
 [tool.poetry.group.format.dependencies]
 # Packages for code formatting
-autopep8 = "^2.0.4"
-black = "^24.1.1"
+autopep8 = "^2.1.0"
+black = "^24.3.0"
 flake8 = "^7.0.0"
 
 [tool.poetry.group.test.dependencies]
 # Packages for testing
-hypothesis = {extras = ["cli"], version = "^6.98.2"}
-pytest = "^8.0.0"
+hypothesis = {extras = ["cli"], version = "^6.99.11"}
+pytest = "^8.1.1"
 pytest-html = "^4.1.1"
 
 [tool.poetry.group.typing.dependencies]
 # Packages for type checking
-mypy = "^1.8.0"
+mypy = "^1.9.0"
 pyre-check = "^0.9.19"
 
 # Extensions for type checking
-types-pyyaml = "^6.0.12.12"
-types-requests = "^2.31.0.20240125"
+types-pyyaml = "^6.0.12.20240311"
+types-requests = "^2.31.0.20240311"
 types-tabulate = "^0.9.0"
 types-ujson = "^5.9.0"
 

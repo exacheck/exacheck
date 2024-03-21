@@ -9,6 +9,7 @@ Misc:
 
 - Update Sentry, Apprise and Pydantic releases
 - Update development group dependency Markdown
+- Update various development dependencies
 
 ## 2024-02-21 - 0.0.11
 
