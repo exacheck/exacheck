@@ -10,7 +10,8 @@ Misc:
 - Update Sentry, Apprise and Pydantic releases
 - Update development group dependency Markdown
 - Update various development dependencies
-- Pytest configuration moved from .ini file to pyproject.toml
+- Pytest configuration moved from .ini file to `pyproject.toml`
+- MyPy configuration moved from .ini file to `pyproject.toml`
 
 ## 2024-02-21 - 0.0.11
 

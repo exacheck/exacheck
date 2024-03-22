@@ -154,3 +154,8 @@ line-length = 120
 [tool.pytest.ini_options]
 log_level = "INFO"
 addopts = "-s"
+
+[tool.mypy]
+ignore_missing_imports = true
+plugins = "pydantic.mypy"
+check_untyped_defs = true
