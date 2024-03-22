@@ -150,3 +150,7 @@ max-line-length = 120
 
 [tool.ruff]
 line-length = 120
+
+[tool.pytest.ini_options]
+log_level = "INFO"
+addopts = "-s"
