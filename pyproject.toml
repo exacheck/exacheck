@@ -55,7 +55,7 @@ exabgp = [
 ]
 
 # General ExaCheck requirements
-apprise = "^1.7.4"
+apprise = "^1.7.5"
 loguru = "^0.7.2"
 pydantic = "^2.6.4"
 pyyaml = "^6.0.1"
@@ -73,7 +73,7 @@ httpx = {extras = ["http2"], version = "^0.27.0"}
 click = "^8.1.7"
 
 # For Sentry support; optional
-sentry-sdk = {version = "^1.43.0", optional = true}
+sentry-sdk = {version = "^1.44.0", optional = true}
 
 [tool.poetry.extras]
 sentry = [
@@ -102,12 +102,12 @@ pycodestyle = "^2.11.1"
 pylint = "^3.1.0"
 pylint-pydantic = "^0.3.2"
 ruff = "^0.3.4"
-semgrep = "^1.66.0"
+semgrep = "^1.67.0"
 
 # Misc other development tools
-Cython = "^3.0.9"
+Cython = "^3.0.10"
 devtools = {extras = ["pygments"], version = "^0.12.2"}
-ipython = "^8.22.2"
+ipython = "^8.23.0"
 Markdown = "^3.6"
 pipenv = "^2023.12.1"
 rich = "^13.7.1"
@@ -121,7 +121,7 @@ flake8 = "^7.0.0"
 
 [tool.poetry.group.test.dependencies]
 # Packages for testing
-hypothesis = {extras = ["cli"], version = "^6.99.11"}
+hypothesis = {extras = ["cli"], version = "^6.100.0"}
 pytest = "^8.1.1"
 pytest-html = "^4.1.1"
 
