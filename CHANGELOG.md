@@ -35,7 +35,7 @@ Changes:
 
 Misc:
 
-- Update semgrep and pydantic releases
+- Update Semgrep and pydantic releases
 - Remove requirement on types-requests; this is not needed for production usage
 - Re-format pyproject.toml - use groups for development/typing/formatting/testing
 
