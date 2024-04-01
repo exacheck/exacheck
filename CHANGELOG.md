@@ -2,7 +2,7 @@
 
 Changes:
 
-- The HTTP health check method now uses [HTTPX](https://www.python-httpx.org/) instead of `requests` to make the request. With this change HTTP2 support is now available for the health check (defaults to False).
+- The HTTP health check method now uses [HTTPX](https://www.python-httpx.org/) instead of `requests` to make the request. With this change HTTP2 support is now available for the health check (defaults to `False`).
 - HTTP check SNI adapter removed - HTTPX can handle SNI natively without requiring an adapter
 
 Misc:
