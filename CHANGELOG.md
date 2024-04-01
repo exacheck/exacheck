@@ -1,8 +1,10 @@
-## PENDING - 0.1.0
+# ExaCheck Changelog
+
+## 2024-04-01 - 0.1.0
 
 Changes:
 
-- The HTTP health check method now uses [HTTPX](https://www.python-httpx.org/) instead of `requests` to make the request. With this change HTTP2 support is now available for the health check (defaults to `False`).
+- The HTTP health check method now uses [HTTPX](https://www.python-httpx.org/) instead of `requests` to make the request
 - HTTP check SNI adapter removed - HTTPX can handle SNI natively without requiring an adapter
 
 Misc:
@@ -12,6 +14,10 @@ Misc:
 - Update various development dependencies
 - Pytest configuration moved from .ini file to `pyproject.toml`
 - MyPy configuration moved from .ini file to `pyproject.toml`
+
+Features
+
+- With the change to [HTTPX](https://www.python-httpx.org/), the HTTP health check now supports HTTP2 (defaults to `False`)
 
 ## 2024-02-21 - 0.0.11
 
