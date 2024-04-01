@@ -554,7 +554,7 @@
                     "title": "HTTP Timeout"
                 },
                 "user_agent": {
-                    "default": "ExaCheck HTTP Health Check [v0.0.11]",
+                    "default": "ExaCheck HTTP Health Check [v0.1.0]",
                     "description": "The user agent to send with the HTTP request",
                     "title": "User Agent",
                     "type": "string"
@@ -620,6 +620,12 @@
                     "default": null,
                     "description": "The request data to send for POST requests",
                     "title": "Request Data"
+                },
+                "http2": {
+                    "default": false,
+                    "description": "Enable the HTTP/2 protocol for the request",
+                    "title": "Enable HTTP/2",
+                    "type": "boolean"
                 }
             },
             "required": [

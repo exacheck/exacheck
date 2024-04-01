@@ -99,6 +99,12 @@ class HTTPArgs(Remote):
         default=None,
     )
 
+    http2: bool = Field(
+        title="Enable HTTP/2",
+        description="Enable the HTTP/2 protocol for the request",
+        default=False,
+    )
+
     @field_validator("http_timeout")
     # pylint: disable=no-self-argument
     def validate_http_timeout(

@@ -39,7 +39,7 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
-# Use 2ip conda environment by default
+# Use conda environment by default
 conda activate exacheck
 
 # Add useful aliases

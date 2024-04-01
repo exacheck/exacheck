@@ -1,3 +1,24 @@
+# ExaCheck Changelog
+
+## 2024-04-01 - 0.1.0
+
+Changes:
+
+- The HTTP health check method now uses [HTTPX](https://www.python-httpx.org/) instead of `requests` to make the request
+- HTTP check SNI adapter removed - HTTPX can handle SNI natively without requiring an adapter
+
+Misc:
+
+- Update Sentry, Apprise and Pydantic releases
+- Update development group dependency Markdown
+- Update various development dependencies
+- Pytest configuration moved from .ini file to `pyproject.toml`
+- MyPy configuration moved from .ini file to `pyproject.toml`
+
+Features
+
+- With the change to [HTTPX](https://www.python-httpx.org/), the HTTP health check now supports HTTP2 (defaults to `False`)
+
 ## 2024-02-21 - 0.0.11
 
 Fixes:
@@ -20,7 +41,7 @@ Changes:
 
 Misc:
 
-- Update semgrep and pydantic releases
+- Update Semgrep and pydantic releases
 - Remove requirement on types-requests; this is not needed for production usage
 - Re-format pyproject.toml - use groups for development/typing/formatting/testing
 
