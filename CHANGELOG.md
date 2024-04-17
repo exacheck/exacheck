@@ -1,5 +1,11 @@
 # ExaCheck Changelog
 
+## PENDING - 0.1.1
+
+Misc:
+
+- Update Apprise, Pydantic, Sentry and various development related modules
+
 ## 2024-04-01 - 0.1.0
 
 Changes:
