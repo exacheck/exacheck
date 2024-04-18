@@ -1,5 +1,5 @@
 # Set Python release to use as base
-ARG PYTHON_VERSION=3.11
+ARG PYTHON_VERSION=3.12
 
 # Create base layer
 FROM python:${PYTHON_VERSION}-slim AS base
