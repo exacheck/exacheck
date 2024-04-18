@@ -1,5 +1,24 @@
 # ExaCheck Changelog
 
+## 2024-04-18 - 0.1.1
+
+Changes:
+
+- Docker builds now use a venv rather than installing in system Python
+- Docker builds now use Python 3.12 as the base
+
+Fixes:
+
+- Docker builds were not including ExaBGP so they would not be able to work. To fix this the requirement on ExaBGP has been dropped from Python >= 3.12. To use ExaCheck with Python 3.12 onwards (if not using Docker) you must currently install ExaBGP from source:
+
+```bash
+python3 -m pip --no-cache-dir install "git+https://github.com/Exa-Networks/exabgp.git@4.2"
+```
+
+Misc:
+
+- Update Apprise, Pydantic, Sentry and various development related modules
+
 ## 2024-04-01 - 0.1.0
 
 Changes:

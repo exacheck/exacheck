@@ -92,6 +92,8 @@
       "ujson",
       "UNSPEC",
       "urllib",
+      "vendoring",
+      "venv",
       "workerprocesserror",
       "YXDOMAIN"
     ],
