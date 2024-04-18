@@ -46,13 +46,13 @@ exacheck = 'exacheck.cli:cli'
 python = ">=3.10,<3.13"
 
 # ExaBGP itself
-exabgp = [
-  # If using Python <3.11, ExaBGP can be installed from PyPI without issues
-  {version = "^4.2.21", python = "<=3.11"},
-  # If using Python 3.12 or higher, ExaBGP needs to be build from source due to the following error when running ExaBGP:
-  #   ModuleNotFoundError: No module named 'exabgp.vendoring.six.moves'
-  {git = "https://github.com/Exa-Networks/exabgp.git", branch = "4.2", python = ">=3.12"},
-]
+# Currently this will only be included as a dependancy when using Python 3.11 or below
+# To use Python 3.12 or above, ExaBGP must be installed from source due to the following error:
+#   ModuleNotFoundError: No module named 'exabgp.vendoring.six.moves'
+#
+# To install from source:
+#   python3 -m pip --no-cache-dir install "git+https://github.com/Exa-Networks/exabgp.git@4.2"
+exabgp = {version = "^4.2.21", python = "<=3.11"}
 
 # General ExaCheck requirements
 apprise = "^1.7.6"
