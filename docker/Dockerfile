@@ -1,8 +1,8 @@
 # Set Python release to use as base
 ARG PYTHON_VERSION=3.11
 
-# Use Python image
-FROM python:${PYTHON_VERSION}-slim
+# Create base layer
+FROM python:${PYTHON_VERSION}-slim AS base
 
 # Set environment variables for Python
 ENV PYTHONDONTWRITEBYTECODE=x \
@@ -14,21 +14,22 @@ ENV PIP_DEFAULT_TIMEOUT=100 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=off
 
-# Add ExaBGP user and setup permissions
-RUN useradd -Ms /bin/bash exabgp \
-    && mkfifo /run/exabgp.in /run/exabgp.out \
-    && chown -R exabgp:exabgp /run/exabgp.in /run/exabgp.out \
-    && chmod 600 /run/exabgp.in /run/exabgp.out
+# Set environment variables for venv
+ENV PATH=/app/bin:$PATH \
+    VIRTUAL_ENV=/app
 
-# Set ExaCheck tag/branch to install
-ARG EXACHECK_VERSION=v0.1.1
+# Create build layer to create venv and install requirements
+FROM base AS build
 
-# Set path to the git repository for ExaCheck
-ARG EXACHECK_REPOSITORY=https://github.com/exacheck/exacheck.git
+# Set ExaBGP release to install
+ARG EXABGP_VERSION=4.2
 
-# Install requirements and ExaCheck
+# Create the new venv
+RUN python3 -m venv /app
+
+# Install required packages for ExaCheck
 RUN apt-get update \
-    # Install git to clone ExaCheck
+    # Install git to clone ExaBGP
     && apt-get install -y --no-install-recommends \
         git \
     # Upgrade pip, wheel and setuptools
@@ -36,15 +37,31 @@ RUN apt-get update \
         pip \
         setuptools \
         wheel \
-    # Install dumb-init/ExaCheck
+    # Install dumb-init
     && python3 -m pip --no-cache-dir install \
         dumb-init \
-        "git+${EXACHECK_REPOSITORY}@${EXACHECK_VERSION}" \
-    # Remove git and clean up
-    && apt-get remove -y git \
-    && apt-get --purge autoremove -y \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    # Install ExaBGP from source - this is required for Python 3.12 compatibility
+    # until the PyPi release of ExaBGP is updated
+    && python3 -m pip --no-cache-dir install \
+        "git+https://github.com/Exa-Networks/exabgp.git@${EXABGP_VERSION}"
+
+# Copy over the project source files
+COPY . /exacheck
+
+# Install ExaCheck and requirements
+RUN python3 -m pip --no-cache-dir install /exacheck
+
+# Create final layer
+FROM base AS exacheck
+
+# Copy out the venv from the build layer
+COPY --from=build /app /app
+
+# Add ExaBGP user and setup permissions
+RUN useradd -Ms /bin/bash exabgp \
+    && mkfifo /run/exabgp.in /run/exabgp.out \
+    && chown -R exabgp:exabgp /run/exabgp.in /run/exabgp.out \
+    && chmod 600 /run/exabgp.in /run/exabgp.out
 
 # Switch to ExaBGP user
 USER exabgp
@@ -57,5 +74,5 @@ ENV exabgp.daemon.user=exabgp \
 EXPOSE 179/tcp
 
 # Set entrypoint and run ExaBGP
-ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
-CMD ["/usr/local/bin/exabgp", "/etc/exabgp/exabgp.conf"]
+ENTRYPOINT ["/app/bin/dumb-init", "--"]
+CMD ["/app/bin/exabgp", "/etc/exabgp/exabgp.conf"]
