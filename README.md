@@ -21,4 +21,20 @@ Some features from the built in ExaBGP health checking script are **not** availa
 - Out of the box sane defaults where possible
 - JSON schema of configuration (see [schema.json][ExaCheck Configuration Schema] for the current schema)
 
+## Known Issues
+
+If installing Exacheck with Python 3.12 or higher, ExaBGP is not included as a requirement and you must install ExaBGP from source. If using ExaBGP from PyPi using Python 3.12 you will get the following error when running ExaBGP:
+
+```bash
+ModuleNotFoundError: No module named 'exabgp.vendoring.six.moves'
+```
+
+To work around the problem, install ExaBGP from source:
+
+```bash
+python3 -m pip --no-cache-dir install "git+https://github.com/Exa-Networks/exabgp.git@4.2"
+```
+
+If you are using the Docker container you do not need to do anything.
+
 [ExaCheck Configuration Schema]: https://github.com/exacheck/exacheck/blob/main/schema.json
