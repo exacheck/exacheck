@@ -1,5 +1,7 @@
 # ExaCheck Changelog
 
+## PENDING - 0.1.2
+
 ## 2024-04-18 - 0.1.1
 
 Changes:
