@@ -5,6 +5,7 @@
 Misc:
 
 - Update Pydantic and Sentry
+- Update various development dependencies
 
 ## 2024-04-18 - 0.1.1
 
