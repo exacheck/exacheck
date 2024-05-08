@@ -2,6 +2,10 @@
 
 ## PENDING - 0.1.2
 
+Misc:
+
+- Update Pydantic and Sentry
+
 ## 2024-04-18 - 0.1.1
 
 Changes:
