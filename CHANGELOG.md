@@ -1,5 +1,25 @@
 # ExaCheck Changelog
 
+## PENDING - 0.1.2
+
+Changes:
+
+- Bump ExaBGP to build 4.2.22 - This fixes build issues on Python 3.12 which required working around. The Docker image has had the manual deployment of ExaBGP removed since it can now be built on its own successfully.
+
+Misc:
+
+- Update core requirements:
+  - Pydantic
+  - Sentry
+  - Apprise
+  - ujson
+- Update various development dependencies (linting/formatting tools)
+- VS Code Workspace fixes (debugpy, spelling)
+- Dev container image mirror changed to `gitlab.com`
+- Remove duplicate apt install in dev container
+- Reformat docker ignore file
+- Update default compose file
+
 ## 2024-04-18 - 0.1.1
 
 Changes:

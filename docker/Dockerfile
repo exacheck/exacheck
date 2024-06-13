@@ -21,29 +21,17 @@ ENV PATH=/app/bin:$PATH \
 # Create build layer to create venv and install requirements
 FROM base AS build
 
-# Set ExaBGP release to install
-ARG EXABGP_VERSION=4.2
-
 # Create the new venv
 RUN python3 -m venv /app
 
-# Install required packages for ExaCheck
-RUN apt-get update \
-    # Install git to clone ExaBGP
-    && apt-get install -y --no-install-recommends \
-        git \
-    # Upgrade pip, wheel and setuptools
-    && python3 -m pip --no-cache-dir install --upgrade \
+# Upgrade/install requirements for ExaCheck
+RUN python3 -m pip --no-cache-dir install --upgrade \
         pip \
         setuptools \
         wheel \
     # Install dumb-init
     && python3 -m pip --no-cache-dir install \
-        dumb-init \
-    # Install ExaBGP from source - this is required for Python 3.12 compatibility
-    # until the PyPi release of ExaBGP is updated
-    && python3 -m pip --no-cache-dir install \
-        "git+https://github.com/Exa-Networks/exabgp.git@${EXABGP_VERSION}"
+        dumb-init
 
 # Copy over the project source files
 COPY . /exacheck

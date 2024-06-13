@@ -21,6 +21,7 @@
       "dataclassy",
       "datadump",
       "datefmt",
+      "debugpy",
       "DGRAM",
       "dnsargs",
       "dnspython",
@@ -125,7 +126,7 @@
     "configurations": [
       {
         "name": "Python (Default): Current File",
-        "type": "python",
+        "type": "debugpy",
         "request": "launch",
         "program": "${file}",
         "console": "integratedTerminal"
