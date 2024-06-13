@@ -11,6 +11,7 @@ Misc:
   - Apprise
   - ujson
 - Update various development dependencies (linting/formatting tools)
+- VS Code Workspace fixes (debugpy, spelling)
 
 ## 2024-04-18 - 0.1.1
 
