@@ -14,6 +14,7 @@ Misc:
 - VS Code Workspace fixes (debugpy, spelling)
 - Dev container image mirror changed to `gitlab.com`
 - Remove duplicate apt install in dev container
+- Reformat docker ignore file
 
 ## 2024-04-18 - 0.1.1
 

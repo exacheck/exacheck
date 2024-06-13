@@ -1,24 +1,102 @@
-# Ignore VS Code
-.devcontainer
+######################################
+#        Project Ignore Files        #
+######################################
 
-# Ignore Python files not required
-__pycache__
-*.pyc
-*.pyo
-*.pyd
-.Python
-env
-pip-log.txt
-pip-delete-this-directory.txt
-.tox
+# Default configuration
+configuration.yaml
+
+# JSON schema
+schema.json
+
+# Unnecessary files to include in the Docker image
+LICENSE
+
+######################################
+#        General Ignore Files        #
+######################################
+
+# Tests
+tests
+
+# VS Code files
+.devcontainer
+*.code-workspace
+
+# GitHub files (actions etc.)
+.github
+
+# GitLab CI
+.gitlab-ci.yml
+.gitlab-ci.d
+
+# Git related files/directories
+.git
+.gitignore
+.gitattributes
+.gitmodules
+
+# Docker files
+docker-compose.yml
+docker-compose.yaml
+.docker
+Dockerfile
+
+# Code coverage
 .coverage
 .coverage.*
 .cache
 nosetests.xml
 coverage.xml
 *.cover
-*.log
-.git
+
+# Env files
+env
+.env
+*.env
+
+# Log files
+**/*.log
+
+# Swap files
+**/*.swp
+
+######################################
+#        Python Ignore Files         #
+######################################
+
+# Tool directories
 .mypy_cache
+.pyre
+.ruff_cache
+.tox
 .pytest_cache
 .hypothesis
+.idea
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Various tool related configuration files
+.pyre_configuration
+.watchmanconfig
+
+# Ignore Python byte code/cache files
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+# Pip logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Python packaging or distribution
+.Python
+build
+.eggs
+eggs
+develop-eggs
+dist
+sdist
+wheels
+.installed.cfg
