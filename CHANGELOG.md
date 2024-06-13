@@ -4,8 +4,13 @@
 
 Misc:
 
-- Update Pydantic and Sentry
-- Update various development dependencies
+- Bump ExaBGP to build 4.2.22 - This fixes build issues on Python 3.12 which required working around. The Docker image has had the manual deployment of ExaBGP removed since it can now be built on its own successfully.
+- Update core requirements:
+  - Pydantic
+  - Sentry
+  - Apprise
+  - ujson
+- Update various development dependencies (linting/formatting tools)
 
 ## 2024-04-18 - 0.1.1
 
