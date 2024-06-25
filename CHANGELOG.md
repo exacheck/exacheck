@@ -2,7 +2,11 @@
 
 ## PENDING - 0.1.3
 
+Misc:
 
+- Update core requirements:
+  - Sentry
+- Update various development dependencies (linting/formatting tools)
 
 ## 2024-06-13 - 0.1.2
 

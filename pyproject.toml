@@ -67,7 +67,7 @@ httpx = {extras = ["http2"], version = "^0.27.0"}
 click = "^8.1.7"
 
 # For Sentry support; optional
-sentry-sdk = {version = "^2.5.1", optional = true}
+sentry-sdk = {version = "^2.6.0", optional = true}
 
 [tool.poetry.extras]
 sentry = [
@@ -92,11 +92,11 @@ optional = true
 
 [tool.poetry.group.dev.dependencies]
 # Packages for linting
-pycodestyle = "^2.11.1"
+pycodestyle = "^2.12.0"
 pylint = "^3.2.3"
 pylint-pydantic = "^0.3.2"
-ruff = "^0.4.8"
-semgrep = "^1.75.0"
+ruff = "^0.4.10"
+semgrep = "^1.77.0"
 
 # Misc other development tools
 Cython = "^3.0.10"
@@ -109,24 +109,24 @@ rich = "^13.7.1"
 # Define the packages for the optional groups
 [tool.poetry.group.format.dependencies]
 # Packages for code formatting
-autopep8 = "^2.2.0"
+autopep8 = "^2.3.1"
 black = "^24.4.2"
-flake8 = "^7.0.0"
+flake8 = "^7.1.0"
 
 [tool.poetry.group.test.dependencies]
 # Packages for testing
-hypothesis = {extras = ["cli"], version = "^6.103.1"}
+hypothesis = {extras = ["cli"], version = "^6.104.0"}
 pytest = "^8.2.2"
 pytest-html = "^4.1.1"
 
 [tool.poetry.group.typing.dependencies]
 # Packages for type checking
-mypy = "^1.10.0"
+mypy = "^1.10.1"
 pyre-check = "^0.9.21"
 
 # Extensions for type checking
 types-pyyaml = "^6.0.12.20240311"
-types-requests = "^2.32.0.20240602"
+types-requests = "^2.32.0.20240622"
 types-tabulate = "^0.9.0"
 types-ujson = "^5.10.0.20240515"
 
