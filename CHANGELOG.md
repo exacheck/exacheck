@@ -6,6 +6,7 @@ Misc:
 
 - Update core requirements:
   - Sentry
+  - Pydantic
 - Update various development dependencies (linting/formatting tools)
 
 ## 2024-06-13 - 0.1.2
