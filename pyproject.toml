@@ -67,7 +67,7 @@ httpx = {extras = ["http2"], version = "^0.27.0"}
 click = "^8.1.7"
 
 # For Sentry support; optional
-sentry-sdk = {version = "^2.7.1", optional = true}
+sentry-sdk = {version = "^2.8.0", optional = true}
 
 [tool.poetry.extras]
 sentry = [
@@ -95,7 +95,7 @@ optional = true
 pycodestyle = "^2.12.0"
 pylint = "^3.2.5"
 pylint-pydantic = "^0.3.2"
-ruff = "^0.5.0"
+ruff = "^0.5.1"
 semgrep = "^1.78.0"
 
 # Misc other development tools
@@ -115,7 +115,7 @@ flake8 = "^7.1.0"
 
 [tool.poetry.group.test.dependencies]
 # Packages for testing
-hypothesis = {extras = ["cli"], version = "^6.105.0"}
+hypothesis = {extras = ["cli"], version = "^6.105.1"}
 pytest = "^8.2.2"
 pytest-html = "^4.1.1"
 
