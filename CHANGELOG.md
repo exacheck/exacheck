@@ -8,6 +8,7 @@ Misc:
   - Sentry
   - Pydantic
 - Update various development dependencies (linting/formatting tools)
+- Add debugger launch configs for VS Code
 
 ## 2024-06-13 - 0.1.2
 
