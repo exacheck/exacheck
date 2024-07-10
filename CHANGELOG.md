@@ -2,6 +2,10 @@
 
 ## PENDING - 0.1.3
 
+Fixes:
+
+- If a DNS health check had a response pattern configured the last character of the response was being removed during validation. Some additional debug output was added in case of future issues.
+
 Misc:
 
 - Update core requirements:
