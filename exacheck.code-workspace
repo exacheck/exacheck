@@ -130,6 +130,33 @@
         "request": "launch",
         "program": "${file}",
         "console": "integratedTerminal"
+      },
+      {
+        "name": "Python: Attach to PID",
+        "type": "debugpy",
+        "request": "attach",
+        "processId": "${command:pickProcess}"
+      },
+      {
+        "name": "Python: Launch ExaCheck",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "/home/vscode/conda/envs/exacheck/bin/exacheck",
+        "args": [
+          "run"
+        ],
+        "console": "integratedTerminal"
+      },
+      {
+        "name": "Python: Launch ExaCheck (Trace Output)",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "/home/vscode/conda/envs/exacheck/bin/exacheck",
+        "args": [
+          "run",
+          "-vvvvvvvvvv"
+        ],
+        "console": "integratedTerminal"
       }
     ]
   }

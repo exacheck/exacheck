@@ -89,10 +89,15 @@ class DNS(Remote):
 
         # Loop over each answer in the response and look for the response pattern
         self.log.bind(event="debug").debug(
-            "Searching DNS response for a match to response pattern"
+            "Searching DNS response for a match to response pattern: {pattern}",
+            pattern=self.args.response.pattern,
         )
-        for answer in [answer.to_text()[:-1] for answer in response.rrset]:
+        for answer in [answer.to_text() for answer in response.rrset]:
             # Test if the answer matches
+            self.log.bind(event="debug").trace(
+                "Testing answer: {answer}",
+                answer=answer,
+            )
             if self.args.response.match(answer):
                 # Match found
                 return CheckResult(
@@ -103,6 +108,12 @@ class DNS(Remote):
                         f"response pattern: {answer}"
                     ),
                 )
+
+            # No match found, continue to next answer if any
+            self.log.bind(event="debug").debug(
+                "Answer did not match response pattern: {answer}",
+                answer=answer,
+            )
 
         # No match found, check failed
         return CheckResult(

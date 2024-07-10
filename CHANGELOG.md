@@ -1,6 +1,20 @@
 # ExaCheck Changelog
 
-## PENDING - 0.1.2
+## 2024-07-10 - 0.1.3
+
+Fixes:
+
+- If a DNS health check had a response pattern configured the last character of the response was being removed during validation. Some additional debug output was added in case of future issues.
+
+Misc:
+
+- Update core requirements:
+  - Sentry
+  - Pydantic
+- Update various development dependencies (linting/formatting tools)
+- Add debugger launch configs for VS Code
+
+## 2024-06-13 - 0.1.2
 
 Changes:
 
