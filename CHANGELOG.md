@@ -7,6 +7,7 @@ Misc:
 - Remove deprecated `version` keyword from dev container compose file
 - Add comments to example compose file
 - Update various development dependencies
+- Add respx to test dependencies
 
 ## 2024-07-10 - 0.1.3
 

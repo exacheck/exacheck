@@ -118,6 +118,7 @@ flake8 = "^7.1.0"
 hypothesis = {extras = ["cli"], version = "^6.106.1"}
 pytest = "^8.2.2"
 pytest-html = "^4.1.1"
+respx = "^0.21.1"
 
 [tool.poetry.group.typing.dependencies]
 # Packages for type checking
