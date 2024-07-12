@@ -26,6 +26,7 @@
       "dnsargs",
       "dnspython",
       "dnsresolutionerror",
+      "ECHILD",
       "exabgp",
       "exacheck",
       "fileargs",
