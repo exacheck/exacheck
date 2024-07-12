@@ -115,7 +115,7 @@ flake8 = "^7.1.0"
 
 [tool.poetry.group.test.dependencies]
 # Packages for testing
-hypothesis = {extras = ["cli"], version = "^6.105.1"}
+hypothesis = {extras = ["cli"], version = "^6.106.1"}
 pytest = "^8.2.2"
 pytest-html = "^4.1.1"
 
@@ -126,7 +126,7 @@ pyre-check = "^0.9.22"
 
 # Extensions for type checking
 types-pyyaml = "^6.0.12.20240311"
-types-requests = "^2.32.0.20240622"
+types-requests = "^2.32.0.20240712"
 types-tabulate = "^0.9.0"
 types-ujson = "^5.10.0.20240515"
 

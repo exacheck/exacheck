@@ -54,13 +54,13 @@ requests-oauthlib = "*"
 
 [[package]]
 name = "astroid"
-version = "3.2.2"
+version = "3.2.3"
 description = "An abstract syntax tree for Python with inference support."
 optional = false
 python-versions = ">=3.8.0"
 files = [
-    {file = "astroid-3.2.2-py3-none-any.whl", hash = "sha256:e8a0083b4bb28fcffb6207a3bfc9e5d0a68be951dd7e336d5dcf639c682388c0"},
-    {file = "astroid-3.2.2.tar.gz", hash = "sha256:8ead48e31b92b2e217b6c9733a21afafe479d52d6e164dd25fb1a770c7c3cf94"},
+    {file = "astroid-3.2.3-py3-none-any.whl", hash = "sha256:3eae9ea67c11c858cdd2c91337d2e816bd019ac897ca07d7b346ac10105fceb3"},
+    {file = "astroid-3.2.3.tar.gz", hash = "sha256:7099b5a60985529d8d46858befa103b82d0d05a5a5e8b816b5303ed96075e1d9"},
 ]
 
 [package.dependencies]
@@ -712,13 +712,13 @@ files = [
 
 [[package]]
 name = "hypothesis"
-version = "6.105.1"
+version = "6.106.1"
 description = "A library for property-based testing"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "hypothesis-6.105.1-py3-none-any.whl", hash = "sha256:d8993472a7bccfc20172e02ba8636bb0067add92d1fa05e95a40bab02c1e8305"},
-    {file = "hypothesis-6.105.1.tar.gz", hash = "sha256:d4eedb42193da9507623f4fe27fd38f715ec19ad30ad7c30e3b25594c0b491dc"},
+    {file = "hypothesis-6.106.1-py3-none-any.whl", hash = "sha256:964f631c28e7af6d15284d3d8bf375ef33f07d3bf2785943f037b1397f0e211e"},
+    {file = "hypothesis-6.106.1.tar.gz", hash = "sha256:bac609694f6ca4d57b4bd66f06310ec6b98e95a01986940aba720e8fd3e836b1"},
 ]
 
 [package.dependencies]
@@ -2419,13 +2419,13 @@ files = [
 
 [[package]]
 name = "types-requests"
-version = "2.32.0.20240622"
+version = "2.32.0.20240712"
 description = "Typing stubs for requests"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "types-requests-2.32.0.20240622.tar.gz", hash = "sha256:ed5e8a412fcc39159d6319385c009d642845f250c63902718f605cd90faade31"},
-    {file = "types_requests-2.32.0.20240622-py3-none-any.whl", hash = "sha256:97bac6b54b5bd4cf91d407e62f0932a74821bc2211f22116d9ee1dd643826caf"},
+    {file = "types-requests-2.32.0.20240712.tar.gz", hash = "sha256:90c079ff05e549f6bf50e02e910210b98b8ff1ebdd18e19c873cd237737c1358"},
+    {file = "types_requests-2.32.0.20240712-py3-none-any.whl", hash = "sha256:f754283e152c752e46e70942fa2a146b5bc70393522257bb85bd1ef7e019dcc3"},
 ]
 
 [package.dependencies]
@@ -2649,4 +2649,4 @@ sentry = ["sentry-sdk"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "8781d80edb2cd4bba44b2aac805be6785be88335af562b7077fff8f30c558170"
+content-hash = "faa90e0d7373d8edc8f48a47aea63f4bdb50d8e8f43049ccec8e065b45d7f08d"
