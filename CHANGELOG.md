@@ -2,6 +2,10 @@
 
 ## PENDING - 0.1.4
 
+Misc:
+
+- Remove deprecated `version` keyword from dev container compose file
+
 ## 2024-07-10 - 0.1.3
 
 Fixes:
