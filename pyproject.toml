@@ -95,7 +95,7 @@ optional = true
 pycodestyle = "^2.12.0"
 pylint = "^3.2.5"
 pylint-pydantic = "^0.3.2"
-ruff = "^0.5.1"
+ruff = "^0.5.2"
 semgrep = "^1.79.0"
 
 # Misc other development tools
@@ -115,7 +115,7 @@ flake8 = "^7.1.0"
 
 [tool.poetry.group.test.dependencies]
 # Packages for testing
-hypothesis = {extras = ["cli"], version = "^6.106.1"}
+hypothesis = {extras = ["cli"], version = "^6.108.2"}
 pytest = "^8.2.2"
 pytest-html = "^4.1.1"
 respx = "^0.21.1"
