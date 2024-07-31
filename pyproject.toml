@@ -49,7 +49,7 @@ python = ">=3.10,<3.13"
 exabgp = "^4.2.22"
 
 # General ExaCheck requirements
-apprise = "^1.8.0"
+apprise = "^1.8.1"
 loguru = "^0.7.2"
 pydantic = "^2.8.2"
 pyyaml = "^6.0.1"
@@ -67,7 +67,7 @@ httpx = {extras = ["http2"], version = "^0.27.0"}
 click = "^8.1.7"
 
 # For Sentry support; optional
-sentry-sdk = {version = "^2.9.0", optional = true}
+sentry-sdk = {version = "^2.12.0", optional = true}
 
 [tool.poetry.extras]
 sentry = [
@@ -93,10 +93,10 @@ optional = true
 [tool.poetry.group.dev.dependencies]
 # Packages for linting
 pycodestyle = "^2.12.0"
-pylint = "^3.2.5"
+pylint = "^3.2.6"
 pylint-pydantic = "^0.3.2"
-ruff = "^0.5.2"
-semgrep = "^1.79.0"
+ruff = "^0.5.5"
+semgrep = "^1.82.0"
 
 # Misc other development tools
 Cython = "^3.0.10"
@@ -115,18 +115,18 @@ flake8 = "^7.1.0"
 
 [tool.poetry.group.test.dependencies]
 # Packages for testing
-hypothesis = {extras = ["cli"], version = "^6.108.2"}
-pytest = "^8.2.2"
+hypothesis = {extras = ["cli"], version = "^6.108.5"}
+pytest = "^8.3.2"
 pytest-html = "^4.1.1"
 respx = "^0.21.1"
 
 [tool.poetry.group.typing.dependencies]
 # Packages for type checking
-mypy = "^1.10.1"
+mypy = "^1.11.1"
 pyre-check = "^0.9.22"
 
 # Extensions for type checking
-types-pyyaml = "^6.0.12.20240311"
+types-pyyaml = "^6.0.12.20240724"
 types-requests = "^2.32.0.20240712"
 types-tabulate = "^0.9.0"
 types-ujson = "^5.10.0.20240515"
