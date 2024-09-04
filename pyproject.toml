@@ -49,7 +49,7 @@ python = ">=3.10,<3.13"
 exabgp = "^4.2.22"
 
 # General ExaCheck requirements
-apprise = "^1.8.1"
+apprise = "^1.9.0"
 loguru = "^0.7.2"
 pydantic = "^2.8.2"
 pyyaml = "^6.0.2"
@@ -61,7 +61,7 @@ ujson = "^5.10.0"
 dnspython = "^2.6.1"
 icmplib = "^3.0.4"
 ntplib = "^0.4.0"
-httpx = {extras = ["http2"], version = "^0.27.0"}
+httpx = {extras = ["http2"], version = "^0.27.2"}
 
 # For the CLI
 click = "^8.1.7"
@@ -93,7 +93,7 @@ optional = true
 [tool.poetry.group.dev.dependencies]
 # Packages for linting
 pycodestyle = "^2.12.1"
-pylint = "^3.2.6"
+pylint = "^3.2.7"
 pylint-pydantic = "^0.3.2"
 ruff = "^0.6.2"
 semgrep = "^1.85.0"
@@ -101,10 +101,10 @@ semgrep = "^1.85.0"
 # Misc other development tools
 Cython = "^3.0.11"
 devtools = {extras = ["pygments"], version = "^0.12.2"}
-ipython = "^8.26.0"
+ipython = "^8.27.0"
 Markdown = "^3.7"
 pipenv = "^2024.0.1"
-rich = "^13.7.1"
+rich = "^13.8.0"
 
 # Define the packages for the optional groups
 [tool.poetry.group.format.dependencies]

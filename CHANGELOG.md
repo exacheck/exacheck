@@ -9,7 +9,10 @@ Misc:
 - Update various development dependencies
 - Add respx to test dependencies
 - Minor formatting fixes
-- Update Apprise and Sentry
+- Update core requirements:
+  - Apprise
+  - Sentry
+  - httpx
 
 ## 2024-07-10 - 0.1.3
 
