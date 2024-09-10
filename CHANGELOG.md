@@ -13,6 +13,7 @@ Misc:
   - Apprise
   - Sentry
   - httpx
+  - Pydantic
 
 ## 2024-07-10 - 0.1.3
 
