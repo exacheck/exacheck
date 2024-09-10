@@ -1,8 +1,6 @@
 ---
 
 # Docker compose VS Code development file
-version: '3.8'
-
 services:
 
   ## Main development container

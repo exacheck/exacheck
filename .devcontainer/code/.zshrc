@@ -45,3 +45,7 @@ conda activate exacheck
 # Add useful aliases
 ## Testing related
 alias pytest-html="pytest --html=/code/pytest-report.html --self-contained-html"
+## Poetry
+alias poetry-outdated="poetry show --outdated --top-level --with dev,format,test,typing"
+alias poetry-upgrade="poetry update --with=dev,format,test,typing"
+alias poetry-up="poetry up --latest --with=dev,format,test,typing"

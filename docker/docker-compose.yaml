@@ -1,21 +1,31 @@
 ---
 
 # ExaBGP + ExaCheck Docker Container
-
 services:
 
   exacheck:
-    image: exacheck/exacheck:latest
+    # The container name can be changed if required (or don't define at all to use the default name)
     container_name: exacheck
+
+    # To build from source, uncomment the following lines and comment out the image line
+    #build:
+    #  context: .
+    #  dockerfile: Dockerfile
+    # By default, the latest image is used. To use a specific version, change the tag (or comment
+    # this line out and use the build section above)
+    image: exacheck/exacheck:latest
+
+    # The container will restart unless stopped
     restart: unless-stopped
 
     # If you want to use the host network, uncomment the following line
     # This may be a shortcut for IPv6 support
     #network_mode: host
 
+    # The configuration files can be mounted from the host to the container (unless you are baking the configuration
+    # into the container)
     volumes:
-      # Either the configuration files or a volume/folder containing the configuration files
-      # exabgp.conf and exacheck.yaml must be mounted for the container to work.
+      # exabgp.conf and exacheck.yaml must be mounted at the minimum for the container to work.
       - ./exabgp.conf:/etc/exabgp/exabgp.conf:ro
       - ./exacheck.yaml:/etc/exabgp/exacheck.yaml:ro
 
@@ -26,5 +36,8 @@ services:
       # To allow inbound BGP connections, uncomment the following line
       #- exabgp.tcp.bind=0.0.0.0
 
+    # By default, ExaBGP will not be listening for inbound connections. For convenience, the port is exposed by
+    # default. Make sure to uncomment the "exabgp.tcp.bind" environment variable above if you want to allow inbound
+    # connections.
     ports:
       - 179:179/tcp

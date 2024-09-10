@@ -1,5 +1,20 @@
 # ExaCheck Changelog
 
+## 2024-09-10 - 0.1.4
+
+Misc:
+
+- Remove deprecated `version` keyword from dev container compose file
+- Add comments to example compose file
+- Update various development dependencies
+- Add respx to test dependencies
+- Minor formatting fixes
+- Update core requirements:
+  - Apprise
+  - Sentry
+  - httpx
+  - Pydantic
+
 ## 2024-07-10 - 0.1.3
 
 Fixes:

@@ -343,9 +343,7 @@ class ExaCheck:
             import sentry_sdk  # pylint: disable=import-outside-toplevel
 
             sentry_sdk.init(
-                dsn=cast(
-                    str, self.configuration.settings.sentry.dsn
-                ),
+                dsn=cast(str, self.configuration.settings.sentry.dsn),
                 release=f"exacheck@{importlib.metadata.version('exacheck')}",
                 attach_stacktrace=self.configuration.settings.sentry.attach_stacktrace,
                 include_local_variables=self.configuration.settings.sentry.include_local_variables,
@@ -537,9 +535,7 @@ class ExaCheck:
     def _reap(self, signum, frame) -> None:
         """Handly SIGCHLD signals to reap zombie processes"""
         # Logging
-        self.log.bind(event="debug").info(
-            "Received SIGCHLD; reaping zombie processes"
-        )
+        self.log.bind(event="debug").info("Received SIGCHLD; reaping zombie processes")
 
         try:
             # Run in loop to catch any processes
@@ -549,9 +545,7 @@ class ExaCheck:
                 # Check if this is the main process
                 if pid == 0:
                     # No more processes to reap
-                    self.log.bind(event="debug").debug(
-                        "Finished reaping processes"
-                    )
+                    self.log.bind(event="debug").debug("Finished reaping processes")
                     break
 
                 # Get the exit code of process
@@ -579,7 +573,10 @@ class ExaCheck:
                         new_worker.start()
 
                         # Replace the job with the new one
-                        self.jobs[self.jobs.index((check, worker))] = (check, new_worker)
+                        self.jobs[self.jobs.index((check, worker))] = (
+                            check,
+                            new_worker,
+                        )
 
                         # Send notification
                         self.notifications.notify(
@@ -590,9 +587,7 @@ class ExaCheck:
 
         except OSError as exc:
             if exc.errno == ECHILD:
-                self.log.bind(event="info").info(
-                    "No child processes to reap"
-                )
+                self.log.bind(event="info").info("No child processes to reap")
             else:
                 self.log.bind(event="error").error(
                     "Error reaping processes: {exc}",

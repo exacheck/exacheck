@@ -66,10 +66,7 @@ class HTTP(Remote):
             )
 
         # Check if a successful response code is required; if so validate it matches
-        if (
-            self.args.require_status
-            and response.status_code != httpx.codes.OK
-        ):
+        if self.args.require_status and response.status_code != httpx.codes.OK:
             return CheckResult(
                 success=False,
                 message=f"HTTP status code {response.status_code} does not match expected status code(s)",
