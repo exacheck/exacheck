@@ -1,6 +1,6 @@
 # ExaCheck Changelog
 
-## PENDING - 0.1.4
+## 2024-09-10 - 0.1.4
 
 Misc:
 
