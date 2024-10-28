@@ -27,7 +27,7 @@ keywords = [
 name = "exacheck"
 readme = "README.md"
 repository = "https://github.com/exacheck/exacheck"
-version = "0.1.4"
+version = "0.1.5"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
@@ -43,7 +43,7 @@ exacheck = 'exacheck.cli:cli'
 
 [tool.poetry.dependencies]
 # Python version required
-python = ">=3.10,<3.13"
+python = ">=3.10,<=3.13"
 
 # ExaBGP itself
 exabgp = "^4.2.22"
@@ -67,7 +67,7 @@ httpx = {extras = ["http2"], version = "^0.27.2"}
 click = "^8.1.7"
 
 # For Sentry support; optional
-sentry-sdk = {version = "^2.14.0", optional = true}
+sentry-sdk = {version = "^2.17.0", optional = true}
 
 [tool.poetry.extras]
 sentry = [
@@ -95,16 +95,16 @@ optional = true
 pycodestyle = "^2.12.1"
 pylint = "^3.2.7"
 pylint-pydantic = "^0.3.2"
-ruff = "^0.6.4"
+ruff = "^0.7.1"
 semgrep = "^1.85.0"
 
 # Misc other development tools
 Cython = "^3.0.11"
 devtools = {extras = ["pygments"], version = "^0.12.2"}
-ipython = "^8.27.0"
+ipython = "^8.29.0"
 Markdown = "^3.7"
-pipenv = "^2024.0.1"
-rich = "^13.8.0"
+pipenv = "^2024.2.0"
+rich = "^13.9.3"
 
 # Define the packages for the optional groups
 [tool.poetry.group.format.dependencies]
@@ -115,19 +115,19 @@ flake8 = "^7.1.1"
 
 [tool.poetry.group.test.dependencies]
 # Packages for testing
-hypothesis = {extras = ["cli"], version = "^6.112.0"}
+hypothesis = {extras = ["cli"], version = "^6.115.5"}
 pytest = "^8.3.2"
 pytest-html = "^4.1.1"
 respx = "^0.21.1"
 
 [tool.poetry.group.typing.dependencies]
 # Packages for type checking
-mypy = "^1.11.2"
+mypy = "^1.13.0"
 pyre-check = "^0.9.22"
 
 # Extensions for type checking
 types-pyyaml = "^6.0.12.20240808"
-types-requests = "^2.32.0.20240907"
+types-requests = "^2.32.0.20241016"
 types-tabulate = "^0.9.0"
 types-ujson = "^5.10.0.20240515"
 

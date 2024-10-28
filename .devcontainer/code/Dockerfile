@@ -2,7 +2,7 @@
 FROM registry.gitlab.com/development-images/ubuntu/python:latest
 
 ## Set default Python version to use
-ENV USE_PYTHON_VERSION="3.12"
+ENV USE_PYTHON_VERSION="3.13"
 
 ## Switch to root
 USER root
@@ -30,6 +30,9 @@ USER vscode
 
 ## Install Conda environment
 RUN /home/vscode/conda/bin/conda create -q -y -n exacheck "python=${USE_PYTHON_VERSION}"
+
+## Install rust; required to build 'pyre-check' with Python 3.13 currently
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 ## Set env var for the default path to the configuration file
 ENV EXACHECK_CONFIG="/code/configuration.yaml"
