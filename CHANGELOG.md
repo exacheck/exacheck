@@ -1,5 +1,15 @@
 # ExaCheck Changelog
 
+## 2024-10-28 - 0.1.5
+
+Misc:
+
+- Update Sentry requirement
+- Update various development dependencies
+- Support Python 3.13
+  - Docker image is now built using Python 3.13 base by default
+  - Development environment is now using Python 3.13 by default
+
 ## 2024-09-10 - 0.1.4
 
 Misc:

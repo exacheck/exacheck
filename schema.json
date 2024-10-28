@@ -554,7 +554,7 @@
                     "title": "HTTP Timeout"
                 },
                 "user_agent": {
-                    "default": "ExaCheck HTTP Health Check [v0.1.4]",
+                    "default": "ExaCheck HTTP Health Check [v0.1.5]",
                     "description": "The user agent to send with the HTTP request",
                     "title": "User Agent",
                     "type": "string"
