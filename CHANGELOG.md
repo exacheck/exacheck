@@ -1,5 +1,11 @@
 # ExaCheck Changelog
 
+## PENDING - 0.1.6
+
+Fixes:
+
+- Allow setting `expected_status` for the HTTP method as a single integer (previously only a list of integers was allowed)
+
 ## 2024-10-28 - 0.1.5
 
 Misc:

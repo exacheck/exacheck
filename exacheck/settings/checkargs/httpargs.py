@@ -51,7 +51,7 @@ class HTTPArgs(Remote):
         default=None,
     )
 
-    expected_status: Optional[list[PositiveInt]] = Field(
+    expected_status: Optional[PositiveInt | list[PositiveInt]] = Field(
         title="Expected Status Code",
         description="One or more HTTP status codes that indicate a successful response",
         default=None,
@@ -160,6 +160,22 @@ class HTTPArgs(Remote):
         if "expected_status" in values and values["expected_status"] is not None:
             # Set require_status false
             values["require_status"] = False
+
+        # Return the new dict
+        return values
+
+    @model_validator(mode="before")
+    # pylint: disable=no-self-argument
+    def set_expected_status(cls, values: dict) -> dict:
+        """
+        If expected_status has been defined and it is an integer, convert it to a list
+        """
+        # Test if the expected_status value is provided
+        if "expected_status" in values and values["expected_status"] is not None:
+            # Test if the expected_status value is an integer
+            if isinstance(values["expected_status"], int):
+                # Convert the expected_status value to a list
+                values["expected_status"] = [values["expected_status"]]
 
         # Return the new dict
         return values
