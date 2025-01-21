@@ -6,6 +6,17 @@ Fixes:
 
 - Allow setting `expected_status` for the HTTP method as a single integer (previously only a list of integers was allowed)
 
+Misc:
+
+- Update core requirements:
+  - Apprise
+  - Loguru
+  - Pydantic
+  - httpx
+  - click
+  - Sentry
+- Update various development dependencies
+
 ## 2024-10-28 - 0.1.5
 
 Misc:
