@@ -97,7 +97,8 @@
                             "type": "string"
                         },
                         {
-                            "const": "self"
+                            "const": "self",
+                            "type": "string"
                         }
                     ],
                     "description": "The next-hop address for the prefix that will be advertised",
@@ -294,7 +295,8 @@
                 "method": {
                     "const": "dns",
                     "description": "Send a query to a DNS server and optionally validate the response",
-                    "title": "DNS Check Method"
+                    "title": "DNS Check Method",
+                    "type": "string"
                 },
                 "query": {
                     "description": "The name to query",
@@ -420,7 +422,8 @@
                 "method": {
                     "const": "file",
                     "description": "Test if a file exists or doesn't exist",
-                    "title": "File Check Method"
+                    "title": "File Check Method",
+                    "type": "string"
                 },
                 "path": {
                     "description": "The path to the file that should be checked",
@@ -492,7 +495,8 @@
                 "method": {
                     "const": "http",
                     "description": "Send a HTTP or HTTPS request to a web server and optionally perform various validation",
-                    "title": "HTTP Check Method"
+                    "title": "HTTP Check Method",
+                    "type": "string"
                 },
                 "url": {
                     "description": "The HTTP/HTTPS URL to check",
@@ -517,6 +521,10 @@
                 },
                 "expected_status": {
                     "anyOf": [
+                        {
+                            "exclusiveMinimum": 0,
+                            "type": "integer"
+                        },
                         {
                             "items": {
                                 "exclusiveMinimum": 0,
@@ -554,7 +562,7 @@
                     "title": "HTTP Timeout"
                 },
                 "user_agent": {
-                    "default": "ExaCheck HTTP Health Check [v0.1.5]",
+                    "default": "ExaCheck HTTP Health Check [v0.1.4]",
                     "description": "The user agent to send with the HTTP request",
                     "title": "User Agent",
                     "type": "string"
@@ -677,7 +685,8 @@
                 "method": {
                     "const": "icmp",
                     "description": "Send ICMP ping packets and ensure the responses are within the configured thresholds",
-                    "title": "ICMP Check Method"
+                    "title": "ICMP Check Method",
+                    "type": "string"
                 },
                 "count": {
                     "default": 3,
@@ -875,7 +884,8 @@
                 "method": {
                     "const": "file",
                     "description": "Enable file based logging",
-                    "title": "Log Method"
+                    "title": "Log Method",
+                    "type": "string"
                 },
                 "structured": {
                     "default": false,
@@ -984,7 +994,8 @@
                 "method": {
                     "const": "ntp",
                     "description": "Send a NTP query to a NTP server and validate the response is within the configured thresholds",
-                    "title": "NTP Check Method"
+                    "title": "NTP Check Method",
+                    "type": "string"
                 },
                 "port": {
                     "default": 123,
@@ -1210,7 +1221,8 @@
                 "method": {
                     "const": "shell",
                     "description": "Run a script to determine if a service is healthy or not based on the exit code",
-                    "title": "Shell Check Method"
+                    "title": "Shell Check Method",
+                    "type": "string"
                 },
                 "command": {
                     "description": "The shell command to run for the health check",
@@ -1343,7 +1355,8 @@
                 "method": {
                     "const": "syslog",
                     "description": "Enable logging to a syslog server hostname, IP address or socket",
-                    "title": "Log Method"
+                    "title": "Log Method",
+                    "type": "string"
                 },
                 "structured": {
                     "default": true,
@@ -1354,7 +1367,8 @@
                 "destination": {
                     "anyOf": [
                         {
-                            "const": "/dev/log"
+                            "const": "/dev/log",
+                            "type": "string"
                         },
                         {
                             "format": "file-path",
@@ -1435,7 +1449,8 @@
                 "method": {
                     "const": "tcp",
                     "description": "Open a TCP connection to a host/port and ensure it is successful",
-                    "title": "TCO Check Method"
+                    "title": "TCO Check Method",
+                    "type": "string"
                 },
                 "port": {
                     "description": "The port to attempt connecting to",
@@ -1487,11 +1502,7 @@
             "title": "Configuration File"
         },
         "exacheck": {
-            "allOf": [
-                {
-                    "$ref": "#/$defs/ExaCheck"
-                }
-            ],
+            "$ref": "#/$defs/ExaCheck",
             "default": {
                 "live_reload": false,
                 "monitoring_interval": 30
