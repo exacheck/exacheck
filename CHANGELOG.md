@@ -1,6 +1,6 @@
 # ExaCheck Changelog
 
-## PENDING - 0.1.6
+## 2025-03-17 - 0.1.6
 
 Fixes:
 
@@ -15,7 +15,9 @@ Misc:
   - httpx
   - click
   - Sentry
+  - ExaBGP
 - Update various development dependencies
+- Minimum Python release 3.11 due to ipython dependency for dev
 
 ## 2024-10-28 - 0.1.5
 

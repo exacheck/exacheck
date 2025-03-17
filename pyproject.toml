@@ -43,17 +43,17 @@ exacheck = 'exacheck.cli:cli'
 
 [tool.poetry.dependencies]
 # Python version required
-python = ">=3.10,<=3.13"
+python = ">=3.11,<=3.14"
 
 # ExaBGP itself
-exabgp = "^4.2.22"
+exabgp = "^4.2.25"
 
 # General ExaCheck requirements
 apprise = "^1.9.2"
 loguru = "^0.7.3"
-pydantic = {extras = ["timezone"], version = "^2.10.5"}
+pydantic = {extras = ["timezone"], version = "^2.11.0b1"}
 pyyaml = "^6.0.2"
-setproctitle = "^1.3.4"
+setproctitle = "^1.3.5"
 tabulate = "^0.9.0"
 ujson = "^5.10.0"
 
@@ -67,7 +67,7 @@ httpx = {extras = ["http2"], version = "^0.28.1"}
 click = "^8.1.8"
 
 # For Sentry support; optional
-sentry-sdk = {version = "^2.20.0", optional = true}
+sentry-sdk = {version = "^2.22.0", optional = true}
 
 [tool.poetry.extras]
 sentry = [
@@ -93,15 +93,15 @@ optional = true
 [tool.poetry.group.dev.dependencies]
 # Packages for linting
 pycodestyle = "^2.12.1"
-pylint = "^3.3.3"
+pylint = "^3.3.5"
 pylint-pydantic = "^0.3.5"
-ruff = "^0.9.2"
+ruff = "^0.11.0"
 semgrep = "^1.85.0"
 
 # Misc other development tools
 Cython = "^3.0.11"
 devtools = {extras = ["pygments"], version = "^0.12.2"}
-ipython = "^8.31.0"
+ipython = "^9.0.2"
 Markdown = "^3.7"
 pipenv = "^2024.4.0"
 rich = "^13.9.4"
@@ -110,13 +110,13 @@ rich = "^13.9.4"
 [tool.poetry.group.format.dependencies]
 # Packages for code formatting
 autopep8 = "^2.3.2"
-black = "^24.8.0"
-flake8 = "^7.1.1"
+black = "^25.1.0"
+flake8 = "^7.1.2"
 
 [tool.poetry.group.test.dependencies]
 # Packages for testing
-hypothesis = {extras = ["cli"], version = "^6.124.1"}
-pytest = "^8.3.4"
+hypothesis = {extras = ["cli"], version = "^6.129.3"}
+pytest = "^8.3.5"
 pytest-html = "^4.1.1"
 respx = "^0.22.0"
 
@@ -127,7 +127,7 @@ pyre-check = "^0.9.23"
 
 # Extensions for type checking
 types-pyyaml = "^6.0.12.20241230"
-types-requests = "^2.32.0.20241016"
+types-requests = "^2.32.0.20250306"
 types-tabulate = "^0.9.0.20241207"
 types-ujson = "^5.10.0.20240515"
 
