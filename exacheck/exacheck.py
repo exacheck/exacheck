@@ -8,12 +8,12 @@ Main ExaCheck class
 
 from __future__ import annotations
 
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 from pathlib import Path
 from pprint import pformat
 from time import sleep
 from typing import Tuple, cast
-from signal import signal, SIGTERM, SIGINT
+from signal import signal, SIGTERM, SIGINT, SIGHUP
 import sys
 import importlib.metadata
 
@@ -28,6 +28,34 @@ from .notifications import Notifications
 from .sleeper import Sleeper
 from .worker import Worker
 from .configuration import Configuration
+
+
+# Check fields whose change requires a full worker restart (a new CheckExecutor
+# or different cadence/threshold/disable behaviour cannot be applied to a
+# running worker mid-loop without subtle races).
+_OPERATIONAL_FIELDS: Tuple[str, ...] = (
+    "args",
+    "interval",
+    "rise",
+    "fall",
+    "disable",
+)
+
+# Check fields whose change can be applied in place: just push the new Check
+# to the worker, which rebuilds its Announcer and re-emits the route. Rise/
+# fall counters and current state are preserved, so no BGP churn or false
+# re-rise period.
+_ROUTE_FIELDS: Tuple[str, ...] = (
+    "prefixes",
+    "nexthop",
+    "metric",
+    "metric_down",
+    "communities",
+    "as_path",
+    "local_preference",
+    "path_id",
+    "neighbors",
+)
 
 
 # pylint: disable=too-few-public-methods
@@ -97,6 +125,14 @@ class ExaCheck:
             configuration=self.configuration.settings.notifications,
         )
 
+        # Per-worker config queues keyed by check name. The master pushes a
+        # new Check onto the queue for an in-place worker update.
+        self._config_queues: dict[str, Queue] = {}
+
+        # Set by the SIGHUP handler; read by the monitoring loop to trigger a
+        # reload outside of the mtime/content poll.
+        self._reload_requested = False
+
         # Log finish of setup
         self.log.bind(event="debug").info("ExaCheck object setup complete")
 
@@ -126,6 +162,7 @@ class ExaCheck:
         # Create signal handler to handle process termination and notification
         signal(SIGINT, self.cleanup)
         signal(SIGTERM, self.cleanup)
+        signal(SIGHUP, self._handle_sighup)
 
         # Run loop of doing nothing for now
         self.log.bind(event="info").info(
@@ -194,27 +231,27 @@ class ExaCheck:
                         message=f"The ExaCheck worker process for the health check `{job[0].name}` failed and has now been respawned.",
                     )
 
-            # Check if live reloads are enabled
-            if self.configuration.settings.exacheck.live_reload:
-                # Start configuration file change test
+            # Determine whether to reload: either SIGHUP forced it, or live
+            # reload is enabled and the file contents have changed.
+            if self._reload_requested:
+                self._reload_requested = False
+                self.log.bind(event="info").info(
+                    "Reload requested by signal; performing configuration reload"
+                )
+                self._reload_configuration()
+            elif self.configuration.settings.exacheck.live_reload:
                 self.log.bind(event="debug").trace(
                     "Testing if the configuration needs to be reloaded"
                 )
-
-                # Check the modification date of the configuration file
                 if self.configuration.is_modified():
-                    # Log that the configuration file has been modified
                     self.log.bind(event="info").info(
                         "Configuration file has been modified; performing live configuration reload"
                     )
-                    # Reload the configuration
                     self._reload_configuration()
                 else:
-                    # No changes to apply
                     self.log.bind(event="debug").trace(
                         "No configuration changes to apply"
                     )
-
             else:
                 self.log.bind(event="debug").trace(
                     "Live configuration reload disabled; not checking for modifications"
@@ -280,18 +317,22 @@ class ExaCheck:
 
     def _create_process(self, check: Check) -> Process:
         """
-        Create a single process/worker for a check
+        Create a single process/worker for a check.
+
+        Also creates a per-worker config queue used by ``_reload_configuration``
+        to push in-place updates without restarting the process.
         """
-        # Create the worker process
         self.log.bind(event="debug").trace(
             "Creating worker process for check {check_name}", check_name=check.name
         )
+        config_queue: Queue = Queue()
         try:
             worker = Process(
                 target=Worker,
                 args=(
                     check,
                     self.notifications,
+                    config_queue,
                 ),
                 daemon=True,
                 name=check.name,
@@ -304,7 +345,9 @@ class ExaCheck:
             )
             raise WorkerProcessError from exc
 
-        # Return the created process
+        # Register the queue so the master can push in-place updates later
+        self._config_queues[check.name] = config_queue
+
         self.log.bind(event="debug").debug(
             "Worker process for check {check_name} created",
             check_name=check.name,
@@ -418,9 +461,26 @@ class ExaCheck:
         # Get the new configuration object
         new = self.configuration.settings
 
-        # Check if the notification configuration is different
+        # Warn about top-level settings that the master only reads at startup.
+        # Applying them properly requires a full ExaCheck restart.
+        ignored: list[str] = []
+        if current.exacheck != new.exacheck:
+            ignored.append(
+                "`exacheck` (monitoring_interval, live_reload) — read once at startup"
+            )
+        if current.logging != new.logging:
+            ignored.append("`logging` — log sinks are configured once at startup")
+        if current.sentry != new.sentry:
+            ignored.append("`sentry` — initialised once at startup")
+        if ignored:
+            self.log.bind(event="error").warning(
+                "The following configuration changes require an ExaCheck restart "
+                "and will not take effect on this reload:\n - {fields}",
+                fields="\n - ".join(ignored),
+            )
+
+        # Notifications can be recreated in-place.
         if current.notifications != new.notifications:
-            # Recreate the notification object
             self.log.bind(event="info").info(
                 "Notification configuration has changed; recreating notifications object",
             )
@@ -429,34 +489,49 @@ class ExaCheck:
                 configuration=new.notifications,
             )
 
-        # Loop over all currently defined checks
+        # Stop workers whose check is no longer in the new config.
         for check in current.checks:
-            # Test if the check name is not defined anymore
             if not new.get_check_name(check.name):
-                # Terminate the worker process
                 self._terminate_worker(check)
 
-        # Loop over all newly defined checks
+        # Start, update, or restart workers for the new check list.
         for check in new.checks:
-            # Test if the check is newly defined
-            if not current.get_check_name(check.name):
-                # Create and start the worker process
-                self._start_worker(check)
+            old_check = current.get_check_name(check.name)
 
-                # Send notification
+            # New check — start a fresh worker
+            if old_check is None:
+                self._start_worker(check)
                 self.notifications.notify(
                     event="info",
                     title=f"ExaCheck Worker Started - {check.name}",
-                    message=f"The ExaCheck worker process for the health check `{check.name}` has been started.",
+                    message=(
+                        f"The ExaCheck worker process for the health check "
+                        f"`{check.name}` has been started."
+                    ),
                 )
-
-                # Move on to next check
                 continue
 
-            # Test if the check has changed
-            if new.get_check_name(check.name) != current.get_check_name(check.name):
-                # Restart the worker to apply new configuration
+            # Existing check — classify what kind of change happened
+            op_changed, route_changed = self._classify_check_change(old_check, check)
+            if op_changed:
+                # Behaviour/cadence change: full restart preserves correctness.
                 self._restart_worker(check)
+            elif route_changed:
+                # Route-attribute change only: hot-update without losing
+                # rise/fall counters or causing a withdraw/re-announce cycle
+                # at startup-rise speed.
+                self._update_worker_routes(check)
+            else:
+                # Only cosmetic fields (e.g. description) changed — nothing
+                # to do, but keep the master's view of the Check in sync.
+                self.log.bind(event="debug").info(
+                    "Check '{name}' has only cosmetic changes; no worker action",
+                    name=check.name,
+                )
+                for index, (existing, process) in enumerate(self.jobs):
+                    if existing.name == check.name:
+                        self.jobs[index] = (check, process)
+                        break
 
     def _restart_worker(self, check: Check) -> None:
         """Restart a worker process"""
@@ -568,12 +643,70 @@ class ExaCheck:
         except ValueError:
             pass
 
-        # Remove the worker process from the list
+        # Remove the worker process from the list and forget its config queue
         self.jobs.remove(worker)
+        self._config_queues.pop(check.name, None)
 
         # Logging
         self.log.bind(event="info").info(
             "Check worker for '{name}' has been stopped",
             name=check.name,
+        )
+
+    def _handle_sighup(self, sig: int, frame: object) -> None:
+        """Set the reload flag in response to SIGHUP.
+
+        The actual reload is performed by the monitoring loop; the signal
+        handler only sets a flag to keep its execution path minimal.
+        """
+        self._reload_requested = True
+
+    @staticmethod
+    def _classify_check_change(old: Check, new: Check) -> Tuple[bool, bool]:
+        """Classify how a check has changed.
+
+        Returns ``(operational_changed, route_changed)``. Fields not in either
+        bucket (currently just ``description``) are considered cosmetic.
+        """
+        op = any(getattr(old, f) != getattr(new, f) for f in _OPERATIONAL_FIELDS)
+        rt = any(getattr(old, f) != getattr(new, f) for f in _ROUTE_FIELDS)
+        return op, rt
+
+    def _update_worker_routes(self, check: Check) -> None:
+        """Push a new Check to a running worker for in-place re-announce.
+
+        The worker drains the queue at the top of each iteration, swaps in
+        the new Check, rebuilds its Announcer, and re-emits the route — all
+        without losing the current rise/fall counters or up_since/down_since
+        timestamps.
+        """
+        queue = self._config_queues.get(check.name)
+        if queue is None:
+            self.log.bind(event="error").warning(
+                "No config queue for check '{name}'; cannot push in-place update",
+                name=check.name,
+            )
+            return
+
+        self.log.bind(event="info").info(
+            "Pushing in-place route update to worker for check '{name}'",
+            name=check.name,
+        )
+        # Replace the Check on the corresponding job tuple so the master's
+        # view stays in sync with the worker's.
+        for index, (existing, process) in enumerate(self.jobs):
+            if existing.name == check.name:
+                self.jobs[index] = (check, process)
+                break
+        queue.put(check)
+
+        # Notification (uses the existing "info" event)
+        self.notifications.notify(
+            event="info",
+            title=f"ExaCheck Worker Route Update - {check.name}",
+            message=(
+                f"Route attributes for the health check `{check.name}` have "
+                "been updated in place without restarting the worker."
+            ),
         )
 

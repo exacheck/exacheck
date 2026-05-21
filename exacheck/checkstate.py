@@ -10,7 +10,7 @@ from datetime import datetime
 from pprint import pformat
 from typing import Literal, Optional
 
-from pydantic import ConfigDict, BaseModel, Field, PositiveInt
+from pydantic import ConfigDict, BaseModel, Field, NonNegativeInt, PositiveInt
 
 from .checkresult import CheckResult
 
@@ -28,6 +28,17 @@ class CheckState(BaseModel):
     advertised: bool = Field(
         title="Advertised",
         description="Whether the prefixes are currently being advertised",
+    )
+
+    current_metric: Optional[NonNegativeInt] = Field(
+        title="Current Metric",
+        description=(
+            "The metric currently advertised with the routes. None if no routes "
+            "are advertised. When metric_down is configured and the service is "
+            "down, this will be set to metric_down rather than the normal metric."
+        ),
+        default=None,
+        le=4294967295,
     )
 
     last_result: Optional[CheckResult] = Field(

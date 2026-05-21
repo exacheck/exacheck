@@ -8,6 +8,7 @@ Load and manage the configuration for ExaCheck
 
 from __future__ import annotations
 
+from hashlib import sha256
 from pathlib import Path
 from pprint import pformat
 from typing import Optional
@@ -55,8 +56,9 @@ class Configuration:
             # Read the configuration file into a dict
             configuration = self._load_file(file=file)
 
-            # Set the modification time for the file
-            self.mtime = file.stat().st_mtime
+            # Record the content hash so polling can detect real changes
+            # (insensitive to mtime touches that don't alter the bytes).
+            self.content_hash = self._hash_file(file)
 
         # Parse the configuration into a Settings object
         try:
@@ -123,86 +125,79 @@ class Configuration:
         # Return the configuration dict
         return configuration
 
+    @staticmethod
+    def _hash_file(file: Path) -> str:
+        """Compute a content hash of the configuration file"""
+        return sha256(file.read_bytes()).hexdigest()
+
     def is_modified(self) -> bool:
-        """Check if the configuration file has been modified"""
+        """Check if the configuration file's contents have changed"""
         # Configuration can only be modified if it is from a configuration file
         if not self.settings.file:
             return False
 
-        # Logging
         self.log.bind(event="debug").trace(
             "Testing if configuration file has been modified",
         )
 
-        # Get the current modification time of the configuration file
-        mtime = self.settings.file.stat().st_mtime
-
-        # Compare the modification times
-        if mtime != self.mtime:
-            # Logging
+        current_hash = self._hash_file(self.settings.file)
+        if current_hash != self.content_hash:
             self.log.bind(event="info").info(
                 "Configuration file has been modified",
             )
-
-            # Return True
             return True
 
-        # Configuration not modified
         self.log.bind(event="debug").trace(
             "Configuration file has not been modified",
         )
         return False
 
     def reload(self) -> bool:
-        """Reload the configuration file"""
-        # Configuration file appears to have been modified, attempt to parse it into a dict
+        """Reload the configuration file.
+
+        Returns True if the file parsed and validated successfully and the new
+        settings were applied. Returns False on any failure; the previous
+        settings remain in use. In both cases ``self.content_hash`` is updated
+        to the current file contents so that ``is_modified`` does not retry
+        the same bytes again — a fix only retriggers when the contents
+        actually change.
+        """
+        # Hash the current file contents first so that even on failure we
+        # avoid hot-looping on the same broken bytes.
+        new_hash = self._hash_file(self.settings.file)
+
         try:
             configuration = self._load_file(file=self.settings.file)
         except Exception as exc:
-            # Log failure
             self.log.bind(event="error").error(
                 "Configuration file has been modified but could not be parsed: {exc}",
                 exc=exc,
             )
-            # Update the modification time
-            self.mtime = self.settings.file.stat().st_mtime
-            # Return False to indicate that the configuration was not reloaded
+            self.content_hash = new_hash
             return False
 
-        # Configuration file was modified and parsed successfully, attempt to load it
         try:
             settings = Settings(**configuration, file=self.settings.file)
         except ValidationError as exc:
-            # Log failure
             self.log.bind(event="error").error(
                 "Configuration file is invalid: {exc}",
                 exc=exc,
             )
-            # Update the modification time
-            self.mtime = self.settings.file.stat().st_mtime
-            # Return False to indicate that the configuration was not reloaded
+            self.content_hash = new_hash
             return False
         except Exception as exc:
-            # Log failure
             self.log.bind(event="error").error(
                 "Exception loading configuration file: {exc}",
                 exc=exc,
             )
-            # Update the modification time
-            self.mtime = self.settings.file.stat().st_mtime
-            # Return False to indicate that the configuration was not reloaded
+            self.content_hash = new_hash
             return False
 
-        # Update the modification time
-        self.mtime = self.settings.file.stat().st_mtime
-
-        # Configuration file was loaded successfully, update the settings
+        # Success — adopt the new settings and remember the hash
         self.settings = settings
+        self.content_hash = new_hash
 
-        # Log success
         self.log.bind(event="info").info(
             "The configuration has been reloaded successfully",
         )
-
-        # Return True to indicate that the configuration was reloaded
         return True

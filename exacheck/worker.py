@@ -10,7 +10,9 @@ and announcing or withdrawing routes as needed.
 from __future__ import annotations
 
 from datetime import datetime
+from queue import Empty as QueueEmpty
 from signal import signal, SIGTERM, SIGINT
+from typing import Optional
 import sys
 
 from loguru import logger
@@ -33,9 +35,17 @@ class Worker:
     route advertisement/withdrawal as needed
     """
 
-    def __init__(self, check: Check, notifications: Notifications):
+    def __init__(
+        self,
+        check: Check,
+        notifications: Notifications,
+        config_queue: Optional[object] = None,
+    ):
         """
-        Set up the new ExaCheck worker object
+        Set up the new ExaCheck worker object.
+
+        ``config_queue`` is an optional ``multiprocessing.Queue`` used by the
+        master to push in-place Check updates without restarting the worker.
         """
         # Bind logging process name
         self.log = logger.bind(check_name=check.name, subsystem="worker")
@@ -45,6 +55,10 @@ class Worker:
 
         # Set the notifications object
         self.notifications = notifications
+
+        # Queue the master uses to push live config updates. Optional so that
+        # unit tests and historical callers do not have to supply one.
+        self.config_queue = config_queue
 
         # Create process name manager object
         self.procname = ProcName(
@@ -61,6 +75,7 @@ class Worker:
         self.check_state = CheckState(
             state="startup",
             advertised=False,
+            current_metric=None,
         )
 
         # Set check method
@@ -87,6 +102,10 @@ class Worker:
 
         # Start infinite loop
         while True:
+            # Apply any pending in-place config updates from the master before
+            # starting this iteration.
+            self._drain_pending_config()
+
             # Log start of health check
             self.log.bind(event="debug").debug("Health check loop start")
 
@@ -175,53 +194,63 @@ class Worker:
         # Get existing check state object
         state = self.check_state
 
-        # Check if the route is currently advertised
-        if state.advertised:
-            # The route is already advertised, create new check state
+        # Already fully up at the normal metric: nothing to do.
+        # When metric_down is configured, "advertised" alone is not sufficient
+        # — a degraded service is also advertised. The "up" state name is what
+        # discriminates a healthy advertisement from a degraded one.
+        if state.advertised and state.state == "up":
             self.log.bind(event="debug").info(
                 "Health check successful and prefixes are already advertised"
             )
             self.check_state = CheckState(
                 state="up",
                 advertised=True,
+                current_metric=state.current_metric,
                 last_result=result,
                 up_since=state.up_since,
             )
-            # Return
             return
 
+        # Otherwise the service is either fully down, degraded, rising, or in
+        # startup. Increment the rise counter.
+        rise = (state.rise or 0) + 1
+
         # Check if the service has risen
-        if state.rise and (state.rise + 1) >= self.check.rise:
-            # Service is now risen, call function to announce route
-            self.log.bind(event="announce").success(
-                "Health check successful and service has risen; prefixes will be advertised"
-            )
-            self.announce()
-            # Create the new check state
+        if rise >= self.check.rise:
+            # Re-announce at the normal metric. This call is the same regardless
+            # of whether the previous state was fully down (fresh announce) or
+            # degraded (re-announce with restored metric); the announcer is
+            # idempotent and ExaBGP treats a second announce as an attribute
+            # update.
+            was_degraded = state.advertised and state.current_metric != self.check.metric
+            if was_degraded:
+                self.log.bind(event="announce").success(
+                    "Health check successful and service has risen; metric will be restored to normal"
+                )
+            else:
+                self.log.bind(event="announce").success(
+                    "Health check successful and service has risen; prefixes will be advertised"
+                )
+            self.announce(restored=was_degraded)
             self.check_state = CheckState(
                 state="up",
                 advertised=True,
+                current_metric=self.check.metric,
                 last_result=result,
                 up_since=datetime.now(),
             )
-            # Return
             return
 
-        # The service does not meet minimum requirements to rise yet
+        # The service does not meet minimum requirements to rise yet.
+        # Preserve the current advertised/metric state — we're only counting
+        # successes, not changing what's on the wire.
         self.log.bind(event="info").info(
             "Health check successful but service has not risen yet",
         )
-
-        # If there is an existing rise value, add 1 otherwise set to 1
-        if state.rise:
-            rise = state.rise + 1
-        else:
-            rise = 1
-
-        # Create the new check state
         self.check_state = CheckState(
             state="rising",
-            advertised=False,
+            advertised=state.advertised,
+            current_metric=state.current_metric,
             last_result=result,
             down_since=state.down_since,
             rise=rise,
@@ -234,122 +263,185 @@ class Worker:
         # Get existing check state object
         state = self.check_state
 
-        # Check if the failure is due to the service being disabled
+        # Check if the failure is due to the service being disabled.
+        # A disable file is a manual override — the routes are fully withdrawn
+        # regardless of whether metric_down is configured.
         if result.disabled:
-            # Check if the route is currently advertised
             if state.advertised:
-                # The state is advertised, withdraw the routes
                 self.log.bind(event="withdraw").warning(
                     "Service has been disabled; prefixes will be withdrawn"
                 )
                 self.withdraw()
-                # Set the "since" date to now
                 since = datetime.now()
             else:
-                # The route is not advertised, nothing to do
                 since = state.down_since
 
-            # Create the new check state
             self.check_state = CheckState(
                 state="disabled",
                 advertised=False,
+                current_metric=None,
                 last_result=result,
                 down_since=since,
             )
-
-            # Finish
             return
 
-        # Check if the route is currently advertised
-        if not state.advertised:
-            # The route is not advertised, create new check state
+        # Already in the terminal "down" state (either fully withdrawn or
+        # degraded with metric_down). No transition needed; just refresh the
+        # last result.
+        if state.state == "down":
             self.log.bind(event="debug").info(
-                "Health check failure; prefixes are not advertised"
+                "Health check failure; service already in down state"
             )
             self.check_state = CheckState(
                 state="down",
-                advertised=False,
+                advertised=state.advertised,
+                current_metric=state.current_metric,
                 last_result=result,
-                down_since=state.up_since,
+                down_since=state.down_since,
             )
-
-            # Return
             return
 
-        # Check if the service is falling
-        if state.fall and (state.fall + 1) >= self.check.fall:
-            # Service should now be considered down
-            self.log.bind(event="withdraw").warning(
-                "Health check failure and service has fallen; prefixes will be withdrawn"
-            )
-            # Withdraw the route
-            self.withdraw()
-            # Create the new check state
-            self.check_state = CheckState(
-                state="down",
-                advertised=False,
-                last_result=result,
-                down_since=datetime.now(),
-            )
-            # Return
+        # Service is "up", "falling", "rising", or "startup". Increment the
+        # fall counter and check the threshold.
+        fall = (state.fall or 0) + 1
+
+        if fall >= self.check.fall:
+            # Service has fallen. Either degrade (if metric_down is set) or
+            # withdraw completely.
+            if self.check.metric_down is not None:
+                self.log.bind(event="announce").warning(
+                    "Health check failure and service has fallen; "
+                    "re-advertising routes with down metric ({metric})",
+                    metric=self.check.metric_down,
+                )
+                self.degrade()
+                self.check_state = CheckState(
+                    state="down",
+                    advertised=True,
+                    current_metric=self.check.metric_down,
+                    last_result=result,
+                    down_since=datetime.now(),
+                )
+            else:
+                self.log.bind(event="withdraw").warning(
+                    "Health check failure and service has fallen; prefixes will be withdrawn"
+                )
+                self.withdraw()
+                self.check_state = CheckState(
+                    state="down",
+                    advertised=False,
+                    current_metric=None,
+                    last_result=result,
+                    down_since=datetime.now(),
+                )
             return
 
-        # The service does not meet minimum requirements to fall yet
+        # The service does not meet minimum requirements to fall yet.
+        # Preserve the current advertised/metric state.
         self.log.bind(event="info").info(
             "Health check unsuccessful but the service has not fallen yet",
         )
-
-        # If there is an existing fall value, add 1 otherwise set to 1
-        if state.fall:
-            fall = state.fall + 1
-        else:
-            fall = 1
-
-        # Create the new check state
         self.check_state = CheckState(
             state="falling",
-            advertised=True,
+            advertised=state.advertised,
+            current_metric=state.current_metric,
             last_result=result,
             up_since=state.up_since,
             fall=fall,
         )
 
-    def announce(self) -> None:
+    def announce(self, restored: bool = False) -> None:
         """
-        Announce the health check route
+        Announce the health check route at the normal (up) metric.
+
+        Args:
+            restored: True when this announce is returning the route from a
+                degraded (metric_down) state. Adjusts the log/notification
+                wording and forces re-emission even though the route is
+                already advertised.
         """
-        # Log
         self.log.bind(event="debug").debug("Call to advertise route")
 
-        # Advertise the route if not advertised yet
-        if self.check_state.advertised:
-            # Route advertised, nothing to do
+        # If already advertised at the normal metric, there is nothing to do.
+        # (Note: when transitioning from a degraded state we *are* advertised,
+        # but current_metric differs, so we must re-emit.)
+        if (
+            self.check_state.advertised
+            and self.check_state.current_metric == self.check.metric
+            and not restored
+        ):
             self.log.bind(event="debug").debug(
-                "Health check route is already advertised; no action taken"
+                "Health check route is already advertised at the up metric; no action taken"
             )
+            return
+
+        self.log.bind(event="debug").debug(
+            "Announcing route at up metric ({metric})", metric=self.check.metric,
+        )
+        self.announcer.announce(metric=self.check.metric)
+
+        # Build the notification message
+        if restored:
+            preamble = (
+                "Restoring routes to the normal metric as the service has recovered."
+            )
+            title = f"ExaCheck Event - Route Metric Restored - {self.check.name}"
         else:
-            # Advertise the route
-            self.log.bind(event="debug").debug(
-                "Health check route is not advertised yet; announcing route"
+            preamble = (
+                "Announcing routes for the health check as the service is marked as up."
             )
-            self.announcer.announce(metric=self.check.metric)
+            title = f"ExaCheck Event - Route Announcement - {self.check.name}"
 
-            # Create the message for notification
-            message = [
-                "Announcing routes for the health check as the service is marked as up.",
-                f"The following prefixes will be advertised with the next hop address `{self.check.nexthop}`:",
-            ]
-            for prefix in self.check.prefixes:
-                message.append(f"\n- `{prefix}`")
+        message = [
+            preamble,
+            f"The following prefixes will be advertised with the next hop address `{self.check.nexthop}`:",
+        ]
+        for prefix in self.check.prefixes:
+            message.append(f"\n- `{prefix}`")
 
-            # Send notification
-            self.notifications.notify(
-                event="announce",
-                check=self.check.name,
-                log_context=self.log,
-                title=f"ExaCheck Event - Route Announcement - {self.check.name}",
-                message="\n\n".join(message),
-            )
+        self.notifications.notify(
+            event="announce",
+            check=self.check.name,
+            log_context=self.log,
+            title=title,
+            message="\n\n".join(message),
+        )
+
+    def degrade(self) -> None:
+        """
+        Re-advertise the health check route with the down metric (metric_down).
+
+        Called instead of withdraw() when the service has fallen and the check
+        has a metric_down configured. The route remains advertised but at the
+        less-preferred metric so upstream routers can fail over while still
+        reaching the service if it is the only path.
+        """
+        assert self.check.metric_down is not None
+
+        self.log.bind(event="debug").debug(
+            "Re-advertising route at down metric ({metric})",
+            metric=self.check.metric_down,
+        )
+        self.announcer.announce(metric=self.check.metric_down)
+
+        message = [
+            "Re-advertising routes with the down metric as the service has failed.",
+            (
+                f"The following prefixes will continue to be advertised with the "
+                f"next hop address `{self.check.nexthop}` but with the degraded "
+                f"metric `{self.check.metric_down}`:"
+            ),
+        ]
+        for prefix in self.check.prefixes:
+            message.append(f"\n- `{prefix}`")
+
+        self.notifications.notify(
+            event="announce",
+            check=self.check.name,
+            log_context=self.log,
+            title=f"ExaCheck Event - Route Metric Degraded - {self.check.name}",
+            message="\n\n".join(message),
+        )
 
     def withdraw(self) -> None:
         """
@@ -408,6 +500,81 @@ class Worker:
 
         # Finish
         sys.exit(0)
+
+    def _drain_pending_config(self) -> None:
+        """Apply the most recent Check pushed by the master, if any.
+
+        The queue is drained (non-blocking) and only the latest entry is
+        applied — older queued updates are superseded by newer ones.
+        """
+        if self.config_queue is None:
+            return
+
+        latest: Optional[Check] = None
+        try:
+            while True:
+                latest = self.config_queue.get_nowait()
+        except QueueEmpty:
+            pass
+
+        if latest is not None:
+            self._apply_new_config(latest)
+
+    def _apply_new_config(self, new_check: Check) -> None:
+        """Apply a new Check in place.
+
+        Replaces ``self.check`` and ``self.announcer`` and re-emits the route
+        if currently advertised, choosing the appropriate metric for the
+        current state. Rise/fall counters and up_since/down_since are
+        preserved so the service does not have to re-rise from scratch.
+        """
+        self.log.bind(event="info").info(
+            "Received in-place config update for check '{name}'",
+            name=new_check.name,
+        )
+        state = self.check_state
+        self.check = new_check
+        self.announcer = Announcer(check=new_check, log_context=self.log)
+
+        if not state.advertised:
+            # Nothing on the wire; the next check iteration will use the new
+            # configuration when emitting any future announcement.
+            return
+
+        # If the worker is currently degraded but the new config no longer
+        # has a metric_down, the only correct behaviour is to withdraw — the
+        # operator has explicitly removed the degraded-advertising policy.
+        if state.state == "down" and new_check.metric_down is None:
+            self.log.bind(event="withdraw").warning(
+                "In-place update removed metric_down; withdrawing degraded routes",
+            )
+            self.announcer.withdraw()
+            self.check_state = CheckState(
+                state="down",
+                advertised=False,
+                current_metric=None,
+                last_result=state.last_result,
+                down_since=state.down_since,
+            )
+            return
+
+        # Otherwise re-announce at the metric appropriate to the current state.
+        if state.state == "down":
+            target = new_check.metric_down
+        else:
+            target = new_check.metric
+
+        self.announcer.announce(metric=target)
+        self.check_state = CheckState(
+            state=state.state,
+            advertised=True,
+            current_metric=target,
+            last_result=state.last_result,
+            up_since=state.up_since,
+            down_since=state.down_since,
+            rise=state.rise,
+            fall=state.fall,
+        )
 
     @property
     def _procname_status(self) -> str:

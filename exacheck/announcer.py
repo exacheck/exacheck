@@ -79,17 +79,23 @@ class Announcer:
             command (Literal["announce","withdraw]): If the route needs to be withdrawn or announced/advertised.
             metric (int | None, optional): The metric for the route. Defaults to None.
         """
-        # Test if a metric was defined; if set, create the metric string
-        if metric:
+        # Test if a metric was defined; if set, create the metric string.
+        # The {metric} placeholder is present in the template whenever the
+        # check has either `metric` or `metric_down` set, so we must substitute
+        # *something* (an empty string, not None — otherwise format() would
+        # interpolate the literal text "None" into the ExaBGP command).
+        if metric is not None:
             med = f"med {metric}"
         else:
-            # No metric defined, just set to empty variable
-            med = None
+            med = ""
 
         # Loop over each route
         for route in self.routes:
-            # Format the route with command and MED/metric
-            route_string = route.format(command=command, metric=med)
+            # Format the route with command and MED/metric. Collapse any
+            # whitespace that may result from substituting an empty `med`.
+            route_string = " ".join(
+                route.format(command=command, metric=med).split()
+            )
 
             # Log the command being sent
             if not silent:

@@ -1,5 +1,19 @@
 # ExaCheck Changelog
 
+## TBA - 0.2.0
+
+Features:
+
+- Health checks now honour the `metric_down` configuration option. When a check has `metric_down` set and the service falls, the routes are no longer fully withdrawn — they are instead re-advertised at the configured down metric. When the service recovers, the routes are re-announced at the normal metric. The recovery still requires `rise` consecutive successes, and a disable file or daemon shutdown still fully withdraws the routes. A new `current_metric` field on the internal check state tracks what metric is on the wire.
+- Configuration reload no longer restarts a worker for cosmetic edits. Changes to a check are now classified: operational fields (`args`, `interval`, `rise`, `fall`, `disable`) still trigger a full worker restart, route-attribute fields (`prefixes`, `nexthop`, `metric`, `metric_down`, `communities`, `as_path`, `local_preference`, `path_id`, `neighbors`) are pushed to the running worker over a `multiprocessing.Queue` for an in-place re-announce — preserving rise/fall counters and avoiding the brief route withdrawal/BGP churn the previous code caused. Pure cosmetic edits (e.g. `description`) are now a no-op.
+- `SIGHUP` now triggers an immediate configuration reload (previously operators had to wait up to one `monitoring_interval` for the file polling loop to notice the change).
+- The reload now logs a warning when top-level fields that the master only reads at startup — `exacheck` (monitoring_interval / live_reload), `logging`, `sentry` — are modified, so operators know those changes will not take effect until ExaCheck is restarted.
+
+Fixes:
+
+- `Announcer.send_command` no longer interpolates the literal string `"None"` into ExaBGP commands when a check has `metric_down` set but no normal `metric`. The empty metric token is now elided and intervening whitespace collapsed.
+- Configuration change detection now uses a SHA-256 content hash rather than the file's mtime. `touch`ing the file no longer triggers a spurious reload, and a fix to a previously-broken file is reliably detected even if mtime is preserved. After a failed reload the hash is updated to the broken bytes so the reload is not retried until the file actually changes again.
+
 ## TBA - 0.1.7
 
 Fixes:
