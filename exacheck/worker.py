@@ -9,6 +9,7 @@ and announcing or withdrawing routes as needed.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 from queue import Empty as QueueEmpty
 from signal import signal, SIGTERM, SIGINT
@@ -24,8 +25,22 @@ from .checkresult import CheckResult
 from .checkstate import CheckState
 from .procname import ProcName
 from .settings.check import Check
+from .settings.notifications import Notifications as NotificationSettings
 from .sleeper import Sleeper
 from .notifications import Notifications
+
+
+@dataclass(frozen=True)
+class NotificationsUpdate:
+    """IPC envelope: replace the worker's Notifications with this config.
+
+    Pushed onto a worker's config queue by the master when the notifications
+    section of the configuration file changes. Without this, a forked worker
+    keeps using its pre-fork copy of the Apprise instance and silently
+    delivers notifications to the old URLs.
+    """
+
+    configuration: Optional[list[NotificationSettings]]
 
 
 # pylint: disable=too-few-public-methods,too-many-instance-attributes
@@ -506,26 +521,72 @@ class Worker:
         """
         if self.check_state.advertised:
             self.announcer.withdraw(metric=self.check.metric, silent=True)
+        # Drain any queued notifications from earlier _announce/_degrade/
+        # _withdraw calls so they are not lost when the daemon thread dies
+        # with the process. Bounded so a slow webhook cannot delay shutdown
+        # past the master's 5 s kill timeout.
+        self.notifications.shutdown(timeout=3)
         sys.exit(0)
 
     def _drain_pending_config(self) -> None:
-        """Apply the most recent Check pushed by the master, if any.
+        """Apply the most recent config updates pushed by the master.
 
-        The queue is drained (non-blocking) and only the latest entry is
-        applied — older queued updates are superseded by newer ones.
+        The queue carries two message types:
+
+        * ``Check`` — replace the worker's check with this one and re-emit
+          routes if applicable (see :meth:`_apply_new_config`).
+        * ``NotificationsUpdate`` — rebuild the worker's ``Notifications``
+          object so subsequent notifications go to the updated targets.
+
+        The queue is fully drained (non-blocking) and only the latest of
+        each type is applied; older queued updates of the same type are
+        superseded. Notifications are applied before the check so that any
+        notifications emitted by the check update go to the new targets.
         """
         if self.config_queue is None:
             return
 
-        latest: Optional[Check] = None
+        latest_check: Optional[Check] = None
+        latest_notifications: Optional[NotificationsUpdate] = None
         try:
             while True:
-                latest = self.config_queue.get_nowait()
+                msg = self.config_queue.get_nowait()
+                if isinstance(msg, NotificationsUpdate):
+                    latest_notifications = msg
+                elif isinstance(msg, Check):
+                    latest_check = msg
+                else:
+                    self.log.bind(event="error").warning(
+                        "Unknown config queue message type: {type}",
+                        type=type(msg).__name__,
+                    )
         except QueueEmpty:
             pass
 
-        if latest is not None:
-            self._apply_new_config(latest)
+        if latest_notifications is not None:
+            self._apply_new_notifications(latest_notifications.configuration)
+        if latest_check is not None:
+            self._apply_new_config(latest_check)
+
+    def _apply_new_notifications(
+        self, configuration: Optional[list[NotificationSettings]]
+    ) -> None:
+        """Replace this worker's Notifications object with a fresh one.
+
+        The old object is drained (best effort, bounded timeout) so any
+        notifications already queued get sent via the old Apprise instance
+        before it is dropped — this matters during reload because pending
+        announce/withdraw notifications were targeted at the now-superseded
+        URLs and would otherwise be lost.
+        """
+        self.log.bind(event="info").info(
+            "Received notifications configuration update; rebuilding Notifications",
+        )
+        self.notifications.shutdown(timeout=3)
+        self.notifications = Notifications(
+            log_context=self.log,
+            configuration=configuration,
+        )
 
     def _apply_new_config(self, new_check: Check) -> None:
         """Apply a new Check in place.

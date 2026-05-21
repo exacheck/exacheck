@@ -26,7 +26,7 @@ from .settings.check import Check
 from .settings.sentry import Sentry
 from .notifications import Notifications
 from .sleeper import Sleeper
-from .worker import worker_main
+from .worker import NotificationsUpdate, worker_main
 from .configuration import Configuration
 
 
@@ -442,6 +442,11 @@ class ExaCheck:
                 # Process is still alive (kill+join failed); nothing more we can do
                 pass
 
+        # Drain queued notifications before exiting so the final "Process
+        # Terminated" notification (and anything queued just before) has a
+        # chance to be delivered.
+        self.notifications.shutdown(timeout=5)
+
         # Exit
         sys.exit(0)
 
@@ -479,15 +484,24 @@ class ExaCheck:
                 fields="\n - ".join(ignored),
             )
 
-        # Notifications can be recreated in-place.
+        # Notifications can be recreated in-place. Drain the old one's queue
+        # first so anything pending is flushed before its thread is dropped.
         if current.notifications != new.notifications:
             self.log.bind(event="info").info(
                 "Notification configuration has changed; recreating notifications object",
             )
+            self.notifications.shutdown(timeout=5)
             self.notifications = Notifications(
                 log_context=self.log,
                 configuration=new.notifications,
             )
+            # Forked workers hold a copy of the pre-reload Notifications and
+            # would otherwise keep sending to the old Apprise targets. Push
+            # the new config down each worker's existing config queue so
+            # they rebuild their own Notifications on the next iteration.
+            update = NotificationsUpdate(configuration=new.notifications)
+            for queue in self._config_queues.values():
+                queue.put(update)
 
         # Stop workers whose check is no longer in the new config.
         for check in current.checks:

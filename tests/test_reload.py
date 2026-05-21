@@ -19,8 +19,10 @@ from exacheck import worker as worker_module
 from exacheck.checkstate import CheckState
 from exacheck.configuration import Configuration
 from exacheck.exacheck import ExaCheck, _OPERATIONAL_FIELDS, _ROUTE_FIELDS
+from exacheck.notifications import Notifications
 from exacheck.settings.check import Check
-from exacheck.worker import Worker
+from exacheck.settings.notifications import Notifications as NotificationSettings
+from exacheck.worker import NotificationsUpdate, Worker
 
 
 @pytest.fixture
@@ -276,3 +278,93 @@ def test_reload_failure_does_not_hotloop_on_same_broken_bytes(tmp_path: Path):
     # Next poll on the SAME broken bytes should NOT report modified — content
     # hash now matches what we just rejected.
     assert config.is_modified() is False
+
+
+# ----- in-place notifications config update -----------------------------------
+
+
+def test_apply_new_notifications_drains_old_and_replaces():
+    worker = _worker(_check())
+    old_notifications = worker.notifications  # MagicMock from the helper
+
+    worker._apply_new_notifications(None)  # noop config
+
+    # Old object was shut down (drained) before being dropped
+    old_notifications.shutdown.assert_called_once_with(timeout=3)
+    # And replaced with a fresh, real Notifications instance
+    assert worker.notifications is not old_notifications
+    assert isinstance(worker.notifications, Notifications)
+    # No configuration → noop
+    assert worker.notifications.noop is True
+
+
+def test_apply_new_notifications_with_real_config():
+    worker = _worker(_check())
+    new_config = [
+        NotificationSettings(
+            name="t",
+            url="json://example.com",
+            events=["announce", "withdraw", "info", "error"],
+        )
+    ]
+    worker._apply_new_notifications(new_config)
+    assert worker.notifications.noop is False
+    # The new Apprise instance has one configured target
+    assert len(worker.notifications.apprise) == 1
+    worker.notifications.shutdown(timeout=1)
+
+
+def test_drain_dispatches_check_and_notifications_messages(mock_announcer):
+    """Both message types on the queue should be applied correctly."""
+    from queue import Empty
+    queue = MagicMock()
+    new_check = _check(metric=200)
+    notifications_msg = NotificationsUpdate(configuration=None)
+    items = iter([notifications_msg, new_check])
+
+    def side_effect():
+        try:
+            return next(items)
+        except StopIteration:
+            raise Empty
+
+    queue.get_nowait.side_effect = side_effect
+
+    worker = _worker(_check(metric=100), config_queue=queue)
+    old_notifications = worker.notifications
+    worker.check_state = CheckState(
+        state="up", advertised=True, current_metric=100, up_since=datetime.now()
+    )
+    worker._drain_pending_config()
+
+    # Notifications were rebuilt
+    old_notifications.shutdown.assert_called_once_with(timeout=3)
+    assert worker.notifications is not old_notifications
+    # Check was applied (route re-announce at metric 200)
+    mock_announcer[-1].announce.assert_called_once_with(metric=200)
+    assert worker.check.metric == 200
+
+
+def test_drain_ignores_unknown_message_types(mock_announcer):
+    """An unrecognised queue payload should log a warning and be ignored."""
+    from queue import Empty
+    queue = MagicMock()
+    items = iter(["this is not a Check or NotificationsUpdate"])
+
+    def side_effect():
+        try:
+            return next(items)
+        except StopIteration:
+            raise Empty
+
+    queue.get_nowait.side_effect = side_effect
+
+    worker = _worker(_check(), config_queue=queue)
+    worker.check_state = CheckState(
+        state="up", advertised=True, current_metric=100, up_since=datetime.now()
+    )
+    # Should not raise — unknown messages are logged and discarded.
+    worker._drain_pending_config()
+    # No announce, no withdraw, no notifications rebuild
+    mock_announcer[-1].announce.assert_not_called()
+    mock_announcer[-1].withdraw.assert_not_called()

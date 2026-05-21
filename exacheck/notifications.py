@@ -7,7 +7,11 @@ Configure and manage notifications/alerting with Apprise
 """
 
 from __future__ import annotations
-from typing import Optional
+
+import queue as _queue
+import threading
+from os import getpid
+from typing import Any, Optional
 
 import apprise
 import loguru
@@ -17,7 +21,14 @@ from .settings.notifications import Notifications as NotificationSettings
 
 class Notifications:
     """
-    Set up Apprise notifications and manage the sending of notifications
+    Set up Apprise notifications and manage the sending of notifications.
+
+    Notifications are dispatched asynchronously: ``notify`` enqueues a spec
+    and returns immediately, while a background thread reads from the queue
+    and performs the actual Apprise send. This keeps slow notification
+    backends (e.g. an unresponsive Slack webhook) from stalling the worker
+    check loop. Callers should invoke :meth:`shutdown` during graceful
+    process exit to drain pending notifications before the process dies.
     """
 
     def __init__(
@@ -34,6 +45,13 @@ class Notifications:
 
         # Set an empty check name
         self._check = None
+
+        # Async send infrastructure. The thread is created lazily on first
+        # use because this object is forked into worker processes, and
+        # threads do not survive fork() — each process needs its own.
+        self._queue: _queue.Queue[Optional[dict[str, Any]]] = _queue.Queue()
+        self._thread: Optional[threading.Thread] = None
+        self._thread_pid: Optional[int] = None
 
         # Check if there is no configuration
         if not configuration:
@@ -152,7 +170,11 @@ class Notifications:
         log_context: Optional[loguru.Logger] = None,
     ):
         """
-        Send a notification to the relevant targets
+        Enqueue a notification for asynchronous delivery.
+
+        Returns immediately; the actual Apprise send happens on the
+        background thread. Use :meth:`shutdown` during graceful process
+        exit to drain queued notifications.
 
         Args:
             event (str): The event type
@@ -180,29 +202,6 @@ class Notifications:
                 )
             return
 
-        # Log the fact that a notification needs to be sent
-        if check:
-            log.bind(event="debug").debug(
-                "Notification from check {check} of type {event} will be sent to available notification channels",
-                check=check,
-                event=event,
-            )
-        else:
-            log.bind(event="debug").debug(
-                "General notification of type {event} will be sent to available notification channels",
-                event=event,
-            )
-
-        # Log the content
-        log.bind(event="datadump").trace(
-            "Notification title: {title}",
-            title=title,
-        )
-        log.bind(event="datadump").trace(
-            "Notification message: {message}",
-            message=message,
-        )
-
         # Create the tags for the notification
         if check:
             tags = [f"{check}-{event}", f"_all_-{event}"]
@@ -212,26 +211,83 @@ class Notifications:
         # Map the event name to its Apprise notification level
         notification_type = self._types.get(event, apprise.NotifyType.INFO)
 
-        # Send the notification
         log.bind(event="debug").debug(
-            "Sending the notification with tags {tags}",
+            "Queueing notification with tags {tags}",
             tags=", ".join(tags),
         )
+        log.bind(event="datadump").trace(
+            "Notification title: {title}", title=title,
+        )
+        log.bind(event="datadump").trace(
+            "Notification message: {message}", message=message,
+        )
 
-        try:
-            self.apprise.notify(
-                title=title,
-                body=message,
-                tag=tags,
-                notify_type=notification_type,
-                body_format=apprise.NotifyFormat.MARKDOWN,
-            )
-        except Exception as exc:
-            log.bind(event="error").error(
-                "Failed to send notification: {error}",
-                error=exc,
-            )
-        else:
-            log.bind(event="debug").debug(
-                "Notification sent",
-            )
+        # Make sure a sender thread exists for this process (lazy on first
+        # call, reset after fork()).
+        self._ensure_thread()
+
+        self._queue.put(
+            {
+                "title": title,
+                "body": message,
+                "tag": tags,
+                "notify_type": notification_type,
+                "body_format": apprise.NotifyFormat.MARKDOWN,
+                # Bound logger captured at enqueue time so the eventual
+                # success/failure log retains the caller's check context.
+                "_log": log,
+            }
+        )
+
+    def _ensure_thread(self) -> None:
+        """Start the background sender thread for the current process.
+
+        Threads do not survive ``fork``, so the master's thread is invisible
+        to forked worker processes. On the first ``notify`` call after a
+        fork the PID will not match and a fresh thread + queue is created;
+        any items inherited from the parent's queue are discarded since
+        they have already been (or will be) sent by the parent.
+        """
+        pid = getpid()
+        if self._thread is not None and self._thread_pid == pid:
+            return
+        self._queue = _queue.Queue()
+        self._thread_pid = pid
+        self._thread = threading.Thread(
+            target=self._send_loop,
+            daemon=True,
+            name=f"notifications-{pid}",
+        )
+        self._thread.start()
+
+    def _send_loop(self) -> None:
+        """Background thread loop: pull specs off the queue and send them."""
+        while True:
+            spec = self._queue.get()
+            try:
+                if spec is None:
+                    # Poison pill — graceful shutdown
+                    return
+                log = spec.pop("_log")
+                try:
+                    self.apprise.notify(**spec)
+                except Exception as exc:  # pylint: disable=broad-except
+                    log.bind(event="error").error(
+                        "Failed to send notification: {error}", error=exc,
+                    )
+                else:
+                    log.bind(event="debug").debug("Notification sent")
+            finally:
+                self._queue.task_done()
+
+    def shutdown(self, timeout: float = 5.0) -> None:
+        """Drain pending notifications and stop the background thread.
+
+        Best-effort: returns after at most ``timeout`` seconds even if the
+        queue is not empty. Safe to call when there is no thread running
+        (e.g. on a noop Notifications instance or before any notify call).
+        """
+        if self._thread is None or not self._thread.is_alive():
+            return
+        self._queue.put(None)
+        self._thread.join(timeout=timeout)
