@@ -113,9 +113,15 @@ class CheckExecutor:
                 "Health check execution timed out after {timeout} seconds",
                 timeout=self.method.args.timeout,
             )
+        finally:
+            # Restore the handler *before* clearing the alarm: that way any
+            # signal already in flight is ignored rather than raising
+            # CheckTimeout outside our try/except. The worker installs
+            # SIG_IGN as the baseline; restoring it here means a SIGALRM
+            # fired by Worker._cleanup between iterations is harmless.
+            signal.signal(signal.SIGALRM, signal.SIG_IGN)
+            signal.alarm(0)
 
-        # Disable timeout signal since the check finished
-        signal.alarm(0)
         self.log.bind(event="debug").trace(
             "Health check result generated, disabling timeout handler",
         )

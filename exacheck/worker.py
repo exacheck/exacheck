@@ -12,7 +12,17 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from queue import Empty as QueueEmpty
-from signal import signal, SIGTERM, SIGINT
+from signal import (
+    SIG_DFL,
+    SIG_IGN,
+    SIGALRM,
+    SIGINT,
+    SIGTERM,
+    getsignal,
+    raise_signal,
+    signal,
+)
+from threading import Event
 from typing import Optional
 import sys
 
@@ -78,10 +88,14 @@ class Worker:
             current_metric=None,
         )
         self.check_method = check.args.method
-        # Set to True by the signal handler; checked at the top of every
-        # iteration of run(). All shutdown I/O happens from the main loop,
-        # never from the signal handler itself.
+        # Set to True (and event set) by the signal handler; checked at the
+        # top of every iteration of run(). All shutdown I/O happens from the
+        # main loop, never from the signal handler itself.
         self._termination_requested = False
+        # Used to break Sleeper.sleep() out of its wait when shutdown is
+        # requested — time.sleep retries on EINTR (PEP 475) and would
+        # otherwise hold the loop for up to a full check interval.
+        self._termination_event = Event()
         # procname is created in run() so that constructing a Worker for
         # tests does not mutate the test process's title via setproctitle().
         self.procname: Optional[ProcName] = None
@@ -101,6 +115,13 @@ class Worker:
             log_context=self.log,
         )
         self.procname.update(message="Startup")
+
+        # Default SIGALRM to a no-op. CheckExecutor swaps in its
+        # CheckTimeout-raising handler for the duration of each check and
+        # restores SIG_IGN afterwards, so a stray SIGALRM (including the
+        # one fired by _cleanup to interrupt an in-progress check) is
+        # harmless when no check is actively running.
+        signal(SIGALRM, SIG_IGN)
 
         # Create the check executor
         executor = CheckExecutor(method=self._build_method(), log_context=self.log)
@@ -124,10 +145,13 @@ class Worker:
             # Log start of health check
             self.log.bind(event="debug").debug("Health check loop start")
 
-            # Create the sleeper object and start timer
+            # Create the sleeper object and start timer. Passing the
+            # termination event lets a SIGTERM break the sleep immediately
+            # instead of waiting up to a full interval.
             sleeper = Sleeper(
                 interval=self.check.interval,
                 log_context=self.log,
+                wakeup_event=self._termination_event,
             )
 
             # Update process name
@@ -507,11 +531,35 @@ class Worker:
     def _cleanup(self, sig: int, frame: object) -> None:
         """Signal handler for SIGINT/SIGTERM.
 
-        Sets a flag and returns — no I/O, no logging, no lock acquisitions.
-        The main loop sees the flag at the top of the next iteration and
-        calls ``_shutdown`` to perform the actual route withdrawal and exit.
+        Sets the termination flag + event and fires SIGALRM so any check in
+        progress gets interrupted by the existing CheckExecutor timeout
+        handler. The actual route withdrawal and exit run from the main
+        loop, never from this signal handler.
+
+        Idempotent: a second termination signal that arrives while the
+        first one is still being handled (Ctrl-C on a foreground exacheck
+        sends SIGINT to the whole process group *and* the master then
+        sends SIGTERM via ``worker.terminate()``) must not raise SIGALRM
+        a second time. Otherwise the new CheckTimeout fires inside
+        whatever code is running while the first cleanup's exception is
+        still propagating — typically Loguru's emit, which then prints a
+        "Logging error in Loguru Handler" traceback.
         """
+        if self._termination_requested:
+            return
         self._termination_requested = True
+        # Break any Sleeper.sleep() currently blocking on the event
+        self._termination_event.set()
+        # If we are inside executor.execute() the worker is in a syscall
+        # that would otherwise wait for its full check timeout (up to 10s
+        # by default). Fire SIGALRM to make the CheckExecutor's existing
+        # timeout handler raise CheckTimeout, returning control to the
+        # main loop near-immediately. Only do this if SIGALRM has been
+        # bound to a handler — otherwise (e.g. in tests, or before run()
+        # installed its baseline SIG_IGN) the default disposition would
+        # terminate the process.
+        if getsignal(SIGALRM) is not SIG_DFL:
+            raise_signal(SIGALRM)
 
     def _shutdown(self) -> None:
         """Withdraw any advertised routes and exit the worker process.
