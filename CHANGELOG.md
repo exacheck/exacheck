@@ -5,6 +5,14 @@
 Fixes:
 
 - Worker child processes are no longer left as zombies when ExaBGP terminates ExaCheck. The previous SIGCHLD-based reaper raced against shutdown and respawned workers as the master was exiting; it has been removed in favour of an explicit terminate-and-join in the master cleanup handler, with a SIGKILL escalation on hang. The same fix is applied to `_stop_worker` so live-reload removals do not leak zombies either.
+- Shell health check output is no longer dropped — and, more importantly, no longer leaks into the ExaBGP command stream. `subprocess.run` is now invoked with `capture_output=True`, so `stdout`/`stderr` are properly captured into the `CheckResult` instead of being inherited from the parent (whose stdout is the ExaBGP control channel).
+- ICMP health check: the `Packets lost (...)` error string reported the boolean result of the comparison instead of the actual number of lost packets, due to walrus-operator precedence. Now reports the correct count.
+- ICMP health check: the "max jitter exceeded" error message reported `max_rtt` instead of `jitter`. Now reports the jitter value.
+- DNS resolution error handling: the `getaddrinfo` errno was being matched against string literals (`"-9"`, `"-2"`), so the branches never fired and `AddressFamilyError` was effectively unreachable. Now matched against the `socket.EAI_*` integer constants.
+- `CheckResult.date` was evaluated once at module import time, so every check result shared the same timestamp. Switched to `default_factory=datetime.now` so each result is dated when it is created.
+- `Notifications.notify` no longer raises `IndexError` on an unknown event type; it now falls back to the `INFO` notification level.
+- `_stop_worker` no longer raises `IndexError` if the named worker is missing from the job list; it logs an error and returns.
+- `Sleeper` no longer enforces a hard-coded 1-second floor on the sleep interval — health checks with sub-second intervals now run at the configured cadence. If an iteration over-runs the interval, the next iteration runs immediately (with a warning) instead of being delayed to a full second.
 
 Misc:
 
@@ -13,6 +21,8 @@ Misc:
 - Narrow supported Python range to `>=3.11,<3.14` (ExaBGP 5 does not support Python 3.14)
 - Refresh all other core and development dependencies to their latest compatible versions
 - Drop the obsolete "Known Issues" note about the ExaBGP 4.2 `six.moves` vendoring issue on Python 3.12 (no longer applicable on ExaBGP 5)
+- Master monitoring loop simplified: the redundant `kill(pid, 0)` liveness check has been removed; `Process.is_alive()` is sufficient and already reaps exited children
+- `Settings` duplicate log-path detection rewritten using `collections.Counter` (functionally identical, no longer relies on `set.add` returning `None` inside a comprehension)
 
 ## 2025-03-17 - 0.1.6
 

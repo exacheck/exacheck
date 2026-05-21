@@ -225,14 +225,14 @@ class Remote(Base, ABC):
         try:
             addrinfo = socket.getaddrinfo(host=host, port=0, family=address_family)
         except socket.gaierror as exc:
-            # Get the type of exception based on error number
+            # exc.errno is an int (socket.EAI_*); match against ints, not strings
             match exc.errno:
-                case "-9":
+                case socket.EAI_ADDRFAMILY:
                     # No IP address of the provided address family could be found
                     message = f"Could not resolve an {family} family IP address for hostname '{host}'"
                     self.log.bind(event="error").warning(message)
                     raise AddressFamilyError(message) from exc
-                case "-2":
+                case socket.EAI_NONAME:
                     message = f"Could not resolve host '{host}'; check if it exists"
                 case _:
                     message = f"Could not resolve host '{host}' to an IP address: {exc}"
@@ -243,8 +243,8 @@ class Remote(Base, ABC):
             # Raise the DNS resolution error
             raise DNSResolutionError(message=message) from exc
 
-        # Retrieve the list of IP addresses from the addrinfo as a set to remove duplicates
-        addresses = set(ip for ip in [ip[4][0] for ip in addrinfo])
+        # Retrieve the list of IP addresses from addrinfo, deduplicated
+        addresses = {ai[4][0] for ai in addrinfo}
 
         # Log the DNS resolution information
         self.log.bind(event="datadump").trace(

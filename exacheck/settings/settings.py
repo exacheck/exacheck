@@ -6,6 +6,7 @@ ExaCheck - ExaBGP Health Checker
 Store configuration for the ExaCheck application.
 """
 
+from collections import Counter
 from typing import Optional, Annotated, Union
 
 from pydantic import (
@@ -86,11 +87,8 @@ class Settings(Base):
             if isinstance(logger, LogFile)
         ]
 
-        # Create set of unique paths for searching duplicates
-        unique_paths = set()
-
-        # Search for duplicates
-        duplicates = [path for path in paths if path in unique_paths or unique_paths.add(path)]  # type: ignore
+        # Find duplicates
+        duplicates = [path for path, count in Counter(paths).items() if count > 1]
 
         # Raise error if duplicates found
         if duplicates:

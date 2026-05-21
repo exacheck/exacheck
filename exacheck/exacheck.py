@@ -9,7 +9,6 @@ Main ExaCheck class
 from __future__ import annotations
 
 from multiprocessing import Process
-from os import kill
 from pathlib import Path
 from pprint import pformat
 from time import sleep
@@ -162,20 +161,9 @@ class ExaCheck:
                 "Looping over each worker to ensure it is alive"
             )
             for job in self.jobs:
-                # Get the PID of the job
-                pid = job[1].pid
-
-                # Make sure the PID exists/is running
-                try:
-                    kill(pid, 0)
-                except Exception:
-                    running = False
-                else:
-                    running = True
-
-                # Ensure that the job is still alive
-                if job[1].is_alive() and running:
-                    # Worker is alive; log it
+                # is_alive() also reaps the child if it has exited (it calls
+                # _popen.poll internally), so it is sufficient on its own.
+                if job[1].is_alive():
                     self.log.bind(event="debug").trace(
                         "Worker '{job_name}' is alive", job_name=job[0].name
                     )
@@ -553,7 +541,16 @@ class ExaCheck:
         )
 
         # Get the worker process associated with the check
-        worker = [worker for worker in self.jobs if worker[0].name == check.name][0]
+        worker = next(
+            (w for w in self.jobs if w[0].name == check.name),
+            None,
+        )
+        if worker is None:
+            self.log.bind(event="error").error(
+                "No worker found for check '{name}'; nothing to stop",
+                name=check.name,
+            )
+            return
         process = worker[1]
 
         # Terminate and wait for the worker to exit so it is reaped
