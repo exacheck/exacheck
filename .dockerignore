@@ -8,6 +8,9 @@ configuration.yaml
 # JSON schema
 schema.json
 
+# poetry.lock is not consumed by pip during the image build
+poetry.lock
+
 # Unnecessary files to include in the Docker image
 LICENSE
 
