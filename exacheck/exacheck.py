@@ -8,14 +8,13 @@ Main ExaCheck class
 
 from __future__ import annotations
 
-from errno import ECHILD
 from multiprocessing import Process
-from os import waitpid, WNOHANG, kill
+from os import kill
 from pathlib import Path
 from pprint import pformat
 from time import sleep
 from typing import Tuple, cast
-from signal import signal, SIGTERM, SIGINT, SIGCHLD
+from signal import signal, SIGTERM, SIGINT
 import sys
 import importlib.metadata
 
@@ -114,9 +113,6 @@ class ExaCheck:
 
         # Set process name
         self.procname.update(message="Starting workers")
-
-        # Create signal handler to handle zombie processes
-        signal(SIGCHLD, self._reap)
 
         # Create jobs
         self.jobs = self._start_processes()
@@ -235,12 +231,6 @@ class ExaCheck:
                 self.log.bind(event="debug").trace(
                     "Live configuration reload disabled; not checking for modifications"
                 )
-
-            # Call waitpid in case of zombie processes hanging around
-            try:
-                waitpid(-1, WNOHANG)
-            except Exception:
-                pass
 
             # Finish the sleep timer
             sleeper.finish()
@@ -369,16 +359,57 @@ class ExaCheck:
     def cleanup(self, sig: int, frame: object) -> None:
         """Handle clean up of the master process when the process is terminated
 
+        Terminates every worker process and waits for it to exit so the child
+        is reaped and does not linger as a zombie after the master exits.
+
         Args:
             sig (int): The signal that was received
             frame (object): The frame being executed when the signal was received
         """
+        # Guard against re-entry if a second termination signal arrives while
+        # we are already shutting down
+        if getattr(self, "_shutting_down", False):
+            return
+        self._shutting_down = True
+
+        self.log.bind(event="info").info(
+            "Received termination signal {sig}; shutting down workers",
+            sig=sig,
+        )
+
         # Send notification
         self.notifications.notify(
             event="info",
             title="ExaCheck Process Terminated",
             message="The ExaCheck process has been terminated.",
         )
+
+        # Signal every worker to exit. Each worker's own SIGTERM handler will
+        # withdraw any advertised routes before it exits.
+        for check, worker in self.jobs:
+            if worker.is_alive():
+                self.log.bind(event="debug").debug(
+                    "Sending SIGTERM to worker for check '{name}'",
+                    name=check.name,
+                )
+                worker.terminate()
+
+        # Wait for each worker to exit so it is reaped. Escalate to SIGKILL
+        # if a worker fails to exit within the timeout.
+        for check, worker in self.jobs:
+            worker.join(timeout=5)
+            if worker.is_alive():
+                self.log.bind(event="error").warning(
+                    "Worker for check '{name}' did not exit after SIGTERM; killing",
+                    name=check.name,
+                )
+                worker.kill()
+                worker.join(timeout=2)
+            try:
+                worker.close()
+            except ValueError:
+                # Process is still alive (kill+join failed); nothing more we can do
+                pass
 
         # Exit
         sys.exit(0)
@@ -510,7 +541,11 @@ class ExaCheck:
         )
 
     def _stop_worker(self, check: Check) -> None:
-        """Stop a worker process"""
+        """Stop a worker process
+
+        Terminates the worker and waits for it to exit so the process is
+        reaped (no zombies). Escalates to SIGKILL if the worker hangs.
+        """
         # Logging
         self.log.bind(event="info").info(
             "Check worker for '{name}' is being stopped",
@@ -519,9 +554,22 @@ class ExaCheck:
 
         # Get the worker process associated with the check
         worker = [worker for worker in self.jobs if worker[0].name == check.name][0]
+        process = worker[1]
 
-        # Terminate the worker process
-        worker[1].terminate()
+        # Terminate and wait for the worker to exit so it is reaped
+        process.terminate()
+        process.join(timeout=5)
+        if process.is_alive():
+            self.log.bind(event="error").warning(
+                "Worker for check '{name}' did not exit after SIGTERM; killing",
+                name=check.name,
+            )
+            process.kill()
+            process.join(timeout=2)
+        try:
+            process.close()
+        except ValueError:
+            pass
 
         # Remove the worker process from the list
         self.jobs.remove(worker)
@@ -532,64 +580,3 @@ class ExaCheck:
             name=check.name,
         )
 
-    def _reap(self, signum, frame) -> None:
-        """Handly SIGCHLD signals to reap zombie processes"""
-        # Logging
-        self.log.bind(event="debug").info("Received SIGCHLD; reaping zombie processes")
-
-        try:
-            # Run in loop to catch any processes
-            while True:
-                # Run waitpid for process
-                pid, status = waitpid(-1, WNOHANG)
-                # Check if this is the main process
-                if pid == 0:
-                    # No more processes to reap
-                    self.log.bind(event="debug").debug("Finished reaping processes")
-                    break
-
-                # Get the exit code of process
-                code = status >> 8
-
-                # Log information about it
-                self.log.bind(event="debug").info(
-                    "Reaped process {pid} with exit code {code}",
-                    pid=pid,
-                    code=code,
-                )
-
-                # Respawn the check
-                for check, worker in self.jobs:
-                    if worker.pid == pid:
-                        self.log.bind(event="info").info(
-                            "Worker '{check_name}' has exited; it will be respawned",
-                            check_name=check.name,
-                        )
-
-                        # Create the new worker process
-                        new_worker = self._create_process(check=check)
-
-                        # Start the new worker
-                        new_worker.start()
-
-                        # Replace the job with the new one
-                        self.jobs[self.jobs.index((check, worker))] = (
-                            check,
-                            new_worker,
-                        )
-
-                        # Send notification
-                        self.notifications.notify(
-                            event="error",
-                            title=f"ExaCheck Worker Failure - {check.name}",
-                            message=f"The ExaCheck worker process for the health check `{check.name}` failed and has now been respawned.",
-                        )
-
-        except OSError as exc:
-            if exc.errno == ECHILD:
-                self.log.bind(event="info").info("No child processes to reap")
-            else:
-                self.log.bind(event="error").error(
-                    "Error reaping processes: {exc}",
-                    exc=exc,
-                )
