@@ -1,5 +1,19 @@
 # ExaCheck Changelog
 
+## TBA - 0.1.7
+
+Fixes:
+
+- Worker child processes are no longer left as zombies when ExaBGP terminates ExaCheck. The previous SIGCHLD-based reaper raced against shutdown and respawned workers as the master was exiting; it has been removed in favour of an explicit terminate-and-join in the master cleanup handler, with a SIGKILL escalation on hang. The same fix is applied to `_stop_worker` so live-reload removals do not leak zombies either.
+
+Misc:
+
+- Bump ExaBGP requirement to `^5.0.9` (was `^4.2.25`)
+- Bump tabulate to `^0.10.0`
+- Narrow supported Python range to `>=3.11,<3.14` (ExaBGP 5 does not support Python 3.14)
+- Refresh all other core and development dependencies to their latest compatible versions
+- Drop the obsolete "Known Issues" note about the ExaBGP 4.2 `six.moves` vendoring issue on Python 3.12 (no longer applicable on ExaBGP 5)
+
 ## 2025-03-17 - 0.1.6
 
 Fixes:
