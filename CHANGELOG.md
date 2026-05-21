@@ -22,6 +22,7 @@ Internal:
 - `Worker.__init__` no longer calls `run()`; the multiprocessing target is now the module-level `worker_main(check, notifications, queue)` wrapper that constructs a `Worker` and invokes `run()`. Tests can now instantiate a `Worker` directly for inspection instead of bypassing `__init__` with `__new__`.
 - Internal-only worker methods (`success`/`failure`/`announce`/`degrade`/`withdraw`/`cleanup`) renamed with a leading underscore. `Worker`'s public surface is now just `__init__` and `run`.
 - `Worker.method` property replaced with the plain `_build_method()` method, making it clear that each call allocates a new check-method instance. It is now invoked exactly once, when `run` builds the `CheckExecutor`.
+- Expensive log argument evaluation (`pformat`, `model_dump`, `.pretty`) is now deferred via `logger.opt(lazy=True)` and lambda kwargs. Previously the formatters ran every check iteration regardless of whether the trace/datadump level was enabled — for example `result.pretty` (which calls `pformat(model_dump(...))`) was being computed on every health check and then discarded by the level filter. A microbenchmark of the `_log_result` call shows ~19× speedup (17.4 µs → 0.9 µs per filtered call). Applied across `methods/_base`, `methods/_remote`, `methods/icmp`, `methods/http`, `announcer`, `checkexecutor`, `configuration`, `exacheck`, and `logmanager`.
 
 ## TBA - 0.1.7
 

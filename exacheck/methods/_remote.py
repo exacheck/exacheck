@@ -247,10 +247,10 @@ class Remote(Base, ABC):
         addresses = {ai[4][0] for ai in addrinfo}
 
         # Log the DNS resolution information
-        self.log.bind(event="datadump").trace(
+        self.log.opt(lazy=True).bind(event="datadump").trace(
             "Hostname '{host}' resolved to the following IP addresses:\n{addresses}",
-            host=host,
-            addresses=pformat(addresses, indent=4, width=120),
+            host=lambda: host,
+            addresses=lambda: pformat(addresses, indent=4, width=120),
         )
 
         # Return the resolved addresses as a list

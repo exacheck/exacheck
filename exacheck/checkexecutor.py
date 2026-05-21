@@ -53,9 +53,9 @@ class CheckExecutor:
         result = self._execute()
 
         # Log the raw check result
-        self.log.bind(event="datadump").trace(
+        self.log.opt(lazy=True).bind(event="datadump").trace(
             "Raw check result:\n{result}",
-            result=result.pretty,
+            result=lambda: result.pretty,
         )
 
         # Log the status of the check

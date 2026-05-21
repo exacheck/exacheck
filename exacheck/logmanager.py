@@ -140,9 +140,9 @@ class LogManager:
         self.log.bind(event="debug").debug(
             "Creating {log_type} logger", log_type=config.method
         )
-        self.log.bind(event="datadump").trace(
+        self.log.opt(lazy=True).bind(event="datadump").trace(
             "Logger config:\n{config}",
-            config=config.pretty,
+            config=lambda: config.pretty,
         )
 
         # Generate the log format

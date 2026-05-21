@@ -129,9 +129,9 @@ class ICMP(Remote):
             self.log.bind(event="debug").debug(
                 "Returning CheckResult with failure due to missing ICMP response"
             )
-            self.log.bind(event="datadump").trace(
+            self.log.opt(lazy=True).bind(event="datadump").trace(
                 "Raw check result:\n{result}",
-                result=result.pretty,
+                result=lambda: result.pretty,
             )
             return result
 

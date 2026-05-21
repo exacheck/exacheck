@@ -185,9 +185,9 @@ class Announcer:
             routes.append(route_template_string.format(prefix=prefix))
 
         # Log the completed routes
-        self.log.bind(event="datadump").trace(
+        self.log.opt(lazy=True).bind(event="datadump").trace(
             "Generated routes from template:\n{routes}",
-            routes=pformat(routes, indent=4, width=120),
+            routes=lambda: pformat(routes, indent=4, width=120),
         )
 
         # Return routes
@@ -208,9 +208,9 @@ class Announcer:
         self.log.bind(event="debug").debug(
             "Generating communities to insert into route"
         )
-        self.log.bind(event="datadump").trace(
+        self.log.opt(lazy=True).bind(event="datadump").trace(
             "Raw communities:\n{communities}",
-            communities=pformat(communities, indent=4, width=120),
+            communities=lambda: pformat(communities, indent=4, width=120),
         )
 
         # Create community regex patterns

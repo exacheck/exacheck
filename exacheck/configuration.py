@@ -87,9 +87,9 @@ class Configuration:
 
         # Return loaded settings
         self.log.bind(event="info").info("Configuration file loaded successfully")
-        self.log.bind(event="datadump").trace(
+        self.log.opt(lazy=True).bind(event="datadump").trace(
             "Loaded settings from configuration:\n{settings}",
-            settings=self.settings.pretty,
+            settings=lambda: self.settings.pretty,
         )
 
     def _load_file(self, file: Path) -> dict:
@@ -116,10 +116,10 @@ class Configuration:
                 raise SystemExit(1)
 
         # Dump the configuration dict
-        self.log.bind(event="datadump").trace(
+        self.log.opt(lazy=True).bind(event="datadump").trace(
             "Read {file_type} data:\n{file_content}",
-            file_type=file.suffix[1:].upper(),
-            file_content=pformat(configuration, indent=4, width=120),
+            file_type=lambda: file.suffix[1:].upper(),
+            file_content=lambda: pformat(configuration, indent=4, width=120),
         )
 
         # Return the configuration dict

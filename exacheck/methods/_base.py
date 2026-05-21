@@ -60,7 +60,7 @@ class Base(ABC):
             "Health check returned {status}",
             status="success" if result.success else "failure",
         )
-        self.log.bind(event="datadump").trace(
+        self.log.opt(lazy=True).bind(event="datadump").trace(
             "Health check result:\n{result}",
-            result=result.pretty,
+            result=lambda: result.pretty,
         )

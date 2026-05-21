@@ -287,10 +287,10 @@ class ExaCheck:
             self.log.bind(event="info").debug(
                 "Creating process for check '{check_name}'", check_name=check.name
             )
-            self.log.bind(event="datadump").trace(
+            self.log.opt(lazy=True).bind(event="datadump").trace(
                 "Check '{check_name}' configuration:\n{check_configuration}",
-                check_name=check.name,
-                check_configuration=pformat(check.model_dump()),
+                check_name=lambda: check.name,
+                check_configuration=lambda: pformat(check.model_dump()),
             )
 
             # Create the process
@@ -577,10 +577,10 @@ class ExaCheck:
         )
 
         # Dump the configuration
-        self.log.bind(event="datadump").trace(
+        self.log.opt(lazy=True).bind(event="datadump").trace(
             "Check '{check_name}' configuration:\n{check_configuration}",
-            check_name=check.name,
-            check_configuration=pformat(check.model_dump()),
+            check_name=lambda: check.name,
+            check_configuration=lambda: pformat(check.model_dump()),
         )
 
         # Create the new worker process

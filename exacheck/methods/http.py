@@ -154,9 +154,9 @@ class HTTP(Remote):
                 headers[k] = f"{val}"
 
         # Log the headers that will be used
-        self.log.bind(event="datadump").trace(
+        self.log.opt(lazy=True).bind(event="datadump").trace(
             "HTTP headers created for client:\n{headers}",
-            headers=pformat(headers, indent=4, width=120),
+            headers=lambda: pformat(headers, indent=4, width=120),
         )
 
         # Return the headers
