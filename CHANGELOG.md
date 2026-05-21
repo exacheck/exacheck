@@ -13,6 +13,13 @@ Fixes:
 
 - `Announcer.send_command` no longer interpolates the literal string `"None"` into ExaBGP commands when a check has `metric_down` set but no normal `metric`. The empty metric token is now elided and intervening whitespace collapsed.
 - Configuration change detection now uses a SHA-256 content hash rather than the file's mtime. `touch`ing the file no longer triggers a spurious reload, and a fix to a previously-broken file is reliably detected even if mtime is preserved. After a failed reload the hash is updated to the broken bytes so the reload is not retried until the file actually changes again.
+- Worker `SIGINT`/`SIGTERM` handlers no longer perform I/O (stdout writes via the Announcer, logger lock acquisitions). The handler now only sets a flag; the main loop notices it at the top of the next iteration and performs the route withdrawal and exit from a normal execution context. Removes a latent deadlock risk if a signal arrived while the worker was holding the Loguru lock.
+
+Internal:
+
+- `Worker.__init__` no longer calls `run()`; the multiprocessing target is now the module-level `worker_main(check, notifications, queue)` wrapper that constructs a `Worker` and invokes `run()`. Tests can now instantiate a `Worker` directly for inspection instead of bypassing `__init__` with `__new__`.
+- Internal-only worker methods (`success`/`failure`/`announce`/`degrade`/`withdraw`/`cleanup`) renamed with a leading underscore. `Worker`'s public surface is now just `__init__` and `run`.
+- `Worker.method` property replaced with the plain `_build_method()` method, making it clear that each call allocates a new check-method instance. It is now invoked exactly once, when `run` builds the `CheckExecutor`.
 
 ## TBA - 0.1.7
 

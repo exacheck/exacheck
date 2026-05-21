@@ -60,17 +60,9 @@ def _check(name="t", metric=100, metric_down=None, prefixes=None, **overrides):
 
 
 def _worker(check, config_queue=None):
-    """Construct a Worker bypassing __init__ so we can poke at its methods."""
-    worker = Worker.__new__(Worker)
-    worker.log = logger.bind(check_name=check.name, subsystem="worker")
-    worker.check = check
-    worker.notifications = MagicMock()
+    """Construct a Worker for inspection (does not run the loop)."""
+    worker = Worker(check, MagicMock(), config_queue)
     worker.announcer = MagicMock()
-    worker.config_queue = config_queue
-    worker.check_state = CheckState(
-        state="startup", advertised=False, current_metric=None
-    )
-    worker.check_method = check.args.method
     return worker
 
 

@@ -34,14 +34,13 @@ def _check(metric=100, metric_down=200, rise=2, fall=2):
 
 
 def _worker(check):
-    """Construct a Worker without running its check loop."""
-    worker = Worker.__new__(Worker)
-    worker.log = logger.bind(check_name=check.name, subsystem="worker")
-    worker.check = check
-    worker.notifications = MagicMock()
+    """Construct a Worker without running its check loop.
+
+    Replaces the real Announcer (which writes to stdout) with a MagicMock so
+    tests can inspect announce/withdraw calls.
+    """
+    worker = Worker(check, MagicMock())
     worker.announcer = MagicMock()
-    worker.check_state = CheckState(state="startup", advertised=False, current_metric=None)
-    worker.check_method = check.args.method
     return worker
 
 
@@ -61,7 +60,7 @@ def test_fall_with_metric_down_degrades_instead_of_withdrawing():
     )
 
     # First failure: still falling, no announcer call yet
-    worker.failure(_bad())
+    worker._failure(_bad())
     assert worker.check_state.state == "falling"
     assert worker.check_state.advertised is True
     assert worker.check_state.current_metric == 100
@@ -69,7 +68,7 @@ def test_fall_with_metric_down_degrades_instead_of_withdrawing():
     worker.announcer.withdraw.assert_not_called()
 
     # Second failure: crosses fall threshold. Should DEGRADE, not withdraw.
-    worker.failure(_bad())
+    worker._failure(_bad())
     assert worker.check_state.state == "down"
     assert worker.check_state.advertised is True
     assert worker.check_state.current_metric == 200
@@ -83,7 +82,7 @@ def test_fall_without_metric_down_still_withdraws():
         state="up", advertised=True, current_metric=100, up_since=datetime.now()
     )
 
-    worker.failure(_bad())
+    worker._failure(_bad())
     assert worker.check_state.state == "down"
     assert worker.check_state.advertised is False
     assert worker.check_state.current_metric is None
@@ -102,14 +101,14 @@ def test_rise_from_degraded_restores_normal_metric():
     )
 
     # First success: rising, no re-announce yet
-    worker.success(_ok())
+    worker._success(_ok())
     assert worker.check_state.state == "rising"
     assert worker.check_state.advertised is True
     assert worker.check_state.current_metric == 200
     worker.announcer.announce.assert_not_called()
 
     # Second success: crosses rise threshold, re-announce at normal metric
-    worker.success(_ok())
+    worker._success(_ok())
     assert worker.check_state.state == "up"
     assert worker.check_state.advertised is True
     assert worker.check_state.current_metric == 100
@@ -125,15 +124,49 @@ def test_repeated_failures_in_degraded_state_no_extra_announces():
         down_since=datetime.now(),
     )
 
-    worker.failure(_bad())
-    worker.failure(_bad())
-    worker.failure(_bad())
+    worker._failure(_bad())
+    worker._failure(_bad())
+    worker._failure(_bad())
     # Already in terminal "down" state — no announces or withdraws should fire
     worker.announcer.announce.assert_not_called()
     worker.announcer.withdraw.assert_not_called()
     assert worker.check_state.state == "down"
     assert worker.check_state.advertised is True
     assert worker.check_state.current_metric == 200
+
+
+def test_cleanup_signal_handler_only_sets_flag():
+    """_cleanup must not do I/O — it should only flip _termination_requested."""
+    worker = _worker(_check())
+    worker.check_state = CheckState(
+        state="up", advertised=True, current_metric=100, up_since=datetime.now()
+    )
+    assert worker._termination_requested is False
+    worker._cleanup(15, None)
+    assert worker._termination_requested is True
+    # The signal handler must NOT have called withdraw — that is _shutdown's job
+    worker.announcer.withdraw.assert_not_called()
+
+
+def test_shutdown_withdraws_and_exits():
+    """_shutdown does the route withdrawal and raises SystemExit."""
+    worker = _worker(_check())
+    worker.check_state = CheckState(
+        state="up", advertised=True, current_metric=100, up_since=datetime.now()
+    )
+    with pytest.raises(SystemExit):
+        worker._shutdown()
+    worker.announcer.withdraw.assert_called_once_with(metric=100, silent=True)
+
+
+def test_shutdown_without_advertised_routes_just_exits():
+    worker = _worker(_check())
+    worker.check_state = CheckState(
+        state="down", advertised=False, current_metric=None
+    )
+    with pytest.raises(SystemExit):
+        worker._shutdown()
+    worker.announcer.withdraw.assert_not_called()
 
 
 def test_disable_file_fully_withdraws_even_when_degraded():
@@ -147,7 +180,7 @@ def test_disable_file_fully_withdraws_even_when_degraded():
 
     # Simulate a disabled result
     result = CheckResult(success=False, message="disabled", disabled=True)
-    worker.failure(result)
+    worker._failure(result)
     assert worker.check_state.state == "disabled"
     assert worker.check_state.advertised is False
     assert worker.check_state.current_metric is None

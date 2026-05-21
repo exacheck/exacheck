@@ -26,7 +26,7 @@ from .settings.check import Check
 from .settings.sentry import Sentry
 from .notifications import Notifications
 from .sleeper import Sleeper
-from .worker import Worker
+from .worker import worker_main
 from .configuration import Configuration
 
 
@@ -328,7 +328,7 @@ class ExaCheck:
         config_queue: Queue = Queue()
         try:
             worker = Process(
-                target=Worker,
+                target=worker_main,
                 args=(
                     check,
                     self.notifications,

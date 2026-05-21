@@ -32,7 +32,13 @@ from .notifications import Notifications
 class Worker:
     """
     The ExaCheck worker process for a health check; the worker will call the checks and handle
-    route advertisement/withdrawal as needed
+    route advertisement/withdrawal as needed.
+
+    The class is intentionally split into ``__init__`` (data setup, side-effect
+    free apart from constructing an Announcer) and ``run`` (the process loop,
+    which installs signal handlers, sets the process title, and never returns
+    normally). The module-level :func:`worker_main` is the multiprocessing
+    target — it instantiates a Worker and immediately calls ``run``.
     """
 
     def __init__(
@@ -41,67 +47,61 @@ class Worker:
         notifications: Notifications,
         config_queue: Optional[object] = None,
     ):
-        """
-        Set up the new ExaCheck worker object.
+        """Set up worker state without starting the check loop.
 
         ``config_queue`` is an optional ``multiprocessing.Queue`` used by the
         master to push in-place Check updates without restarting the worker.
         """
-        # Bind logging process name
         self.log = logger.bind(check_name=check.name, subsystem="worker")
-
-        # Set the check data
         self.check: Check = check
-
-        # Set the notifications object
         self.notifications = notifications
-
-        # Queue the master uses to push live config updates. Optional so that
-        # unit tests and historical callers do not have to supply one.
         self.config_queue = config_queue
-
-        # Create process name manager object
-        self.procname = ProcName(
-            base=f"ExaCheck Worker [{self.check.name}]",
-            log_context=self.log,
-        )
-        # Set status to "starting"
-        self.procname.update(message="Startup")
-
-        # Create announcer
         self.announcer = Announcer(check=self.check, log_context=self.log)
-
-        # Set the initial check state
         self.check_state = CheckState(
             state="startup",
             advertised=False,
             current_metric=None,
         )
-
-        # Set check method
         self.check_method = check.args.method
+        # Set to True by the signal handler; checked at the top of every
+        # iteration of run(). All shutdown I/O happens from the main loop,
+        # never from the signal handler itself.
+        self._termination_requested = False
+        # procname is created in run() so that constructing a Worker for
+        # tests does not mutate the test process's title via setproctitle().
+        self.procname: Optional[ProcName] = None
 
-        # Setup done
-        self.log.bind(event="info").info(
-            "ExaCheck worker object created; beginning checks"
-        )
-
-        # Start the check loop
-        self.run()
+        self.log.bind(event="info").info("ExaCheck worker object created")
 
     def run(self) -> None:
         """
-        Run the health check process loop
-        """
-        # Create the check executor
-        executor = CheckExecutor(method=self.method, log_context=self.log)
+        Run the health check process loop.
 
-        # Create signal handler to withdraw routes on SIGTERM/SIGINT
-        signal(SIGINT, self.cleanup)
-        signal(SIGTERM, self.cleanup)
+        Never returns under normal operation — exits via ``sys.exit`` inside
+        ``_shutdown`` when SIGINT/SIGTERM is received.
+        """
+        # Process title manager (lives for the life of the process)
+        self.procname = ProcName(
+            base=f"ExaCheck Worker [{self.check.name}]",
+            log_context=self.log,
+        )
+        self.procname.update(message="Startup")
+
+        # Create the check executor
+        executor = CheckExecutor(method=self._build_method(), log_context=self.log)
+
+        # Signal handlers only set a flag — actual cleanup runs from the
+        # main loop to avoid I/O in signal-handler context.
+        signal(SIGINT, self._cleanup)
+        signal(SIGTERM, self._cleanup)
 
         # Start infinite loop
         while True:
+            # Honour any pending termination request before doing more work.
+            # Calling _shutdown invokes sys.exit which terminates the loop.
+            if self._termination_requested:
+                self._shutdown()
+
             # Apply any pending in-place config updates from the master before
             # starting this iteration.
             self._drain_pending_config()
@@ -137,7 +137,7 @@ class Worker:
                 )
 
                 # Call the failure handler
-                self.failure(result=result)
+                self._failure(result=result)
 
             else:
                 # Perform the health check
@@ -146,10 +146,10 @@ class Worker:
             # Check the result
             if result.success:
                 # Call the success handler
-                self.success(result=result)
+                self._success(result=result)
             else:
                 # Call the failure handler
-                self.failure(result=result)
+                self._failure(result=result)
 
             # Finish the sleep timer
             sleeper.finish()
@@ -163,10 +163,12 @@ class Worker:
             # Sleep for the remaining time
             sleeper.sleep()
 
-    @property
-    def method(self) -> methods.CheckMethods:
+    def _build_method(self) -> methods.CheckMethods:
         """
-        Generate and return the class for the type of health check requested
+        Construct and return a check-method instance for the requested type.
+
+        Allocates a new instance every call, so do not invoke from a hot path.
+        ``run()`` calls this exactly once when building the CheckExecutor.
         """
         # Ensure the check method is available
         if self.check_method not in methods.METHODS:
@@ -187,7 +189,7 @@ class Worker:
             args=self.check.args,
         )
 
-    def success(self, result: CheckResult) -> None:
+    def _success(self, result: CheckResult) -> None:
         """
         Called when the health check returns a successful status
         """
@@ -231,7 +233,7 @@ class Worker:
                 self.log.bind(event="announce").success(
                     "Health check successful and service has risen; prefixes will be advertised"
                 )
-            self.announce(restored=was_degraded)
+            self._announce(restored=was_degraded)
             self.check_state = CheckState(
                 state="up",
                 advertised=True,
@@ -256,7 +258,7 @@ class Worker:
             rise=rise,
         )
 
-    def failure(self, result: CheckResult) -> None:
+    def _failure(self, result: CheckResult) -> None:
         """
         Called when the health check returns a failed status
         """
@@ -271,7 +273,7 @@ class Worker:
                 self.log.bind(event="withdraw").warning(
                     "Service has been disabled; prefixes will be withdrawn"
                 )
-                self.withdraw()
+                self._withdraw()
                 since = datetime.now()
             else:
                 since = state.down_since
@@ -314,7 +316,7 @@ class Worker:
                     "re-advertising routes with down metric ({metric})",
                     metric=self.check.metric_down,
                 )
-                self.degrade()
+                self._degrade()
                 self.check_state = CheckState(
                     state="down",
                     advertised=True,
@@ -326,7 +328,7 @@ class Worker:
                 self.log.bind(event="withdraw").warning(
                     "Health check failure and service has fallen; prefixes will be withdrawn"
                 )
-                self.withdraw()
+                self._withdraw()
                 self.check_state = CheckState(
                     state="down",
                     advertised=False,
@@ -350,7 +352,7 @@ class Worker:
             fall=fall,
         )
 
-    def announce(self, restored: bool = False) -> None:
+    def _announce(self, restored: bool = False) -> None:
         """
         Announce the health check route at the normal (up) metric.
 
@@ -407,11 +409,11 @@ class Worker:
             message="\n\n".join(message),
         )
 
-    def degrade(self) -> None:
+    def _degrade(self) -> None:
         """
         Re-advertise the health check route with the down metric (metric_down).
 
-        Called instead of withdraw() when the service has fallen and the check
+        Called instead of _withdraw() when the service has fallen and the check
         has a metric_down configured. The route remains advertised but at the
         less-preferred metric so upstream routers can fail over while still
         reaching the service if it is the only path.
@@ -443,7 +445,7 @@ class Worker:
             message="\n\n".join(message),
         )
 
-    def withdraw(self) -> None:
+    def _withdraw(self) -> None:
         """
         Withdraw the health check route
         """
@@ -487,18 +489,23 @@ class Worker:
             message="\n\n".join(message),
         )
 
-    def cleanup(self, sig: int, frame: object) -> None:
-        """Handle clean up of the worker process when the process is terminated
+    def _cleanup(self, sig: int, frame: object) -> None:
+        """Signal handler for SIGINT/SIGTERM.
 
-        Args:
-            sig (int): The signal that was received
-            frame (object): The frame being executed when the signal was received
+        Sets a flag and returns — no I/O, no logging, no lock acquisitions.
+        The main loop sees the flag at the top of the next iteration and
+        calls ``_shutdown`` to perform the actual route withdrawal and exit.
         """
-        # Withdraw all routes if currently advertised
+        self._termination_requested = True
+
+    def _shutdown(self) -> None:
+        """Withdraw any advertised routes and exit the worker process.
+
+        Runs from the main loop (not the signal handler) so logging and
+        ``Announcer`` I/O happen in a normal execution context.
+        """
         if self.check_state.advertised:
             self.announcer.withdraw(metric=self.check.metric, silent=True)
-
-        # Finish
         sys.exit(0)
 
     def _drain_pending_config(self) -> None:
@@ -586,3 +593,17 @@ class Worker:
                 return f"falling ({self.check_state.fall}/{self.check.fall})"
             case _:
                 return self.check_state.state
+
+
+def worker_main(
+    check: Check,
+    notifications: Notifications,
+    config_queue: Optional[object] = None,
+) -> None:
+    """multiprocessing target — construct a Worker and run its loop.
+
+    Kept as a module-level function so that ``__init__`` no longer has the
+    side effect of running the worker, and so that tests can construct a
+    ``Worker`` for inspection without spinning up the loop.
+    """
+    Worker(check, notifications, config_queue).run()
