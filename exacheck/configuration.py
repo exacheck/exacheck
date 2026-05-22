@@ -9,17 +9,27 @@ Load and manage the configuration for ExaCheck
 from __future__ import annotations
 
 from hashlib import sha256
+from json import loads as json_loads
 from pathlib import Path
 from pprint import pformat
-from typing import Optional
+from typing import Any, Callable, Optional
 import sys
 
-import ujson
 import loguru
 from pydantic import ValidationError
 from yaml import safe_load as yaml_safe_load
 
 from .settings.settings import Settings
+
+
+# Map a (lower-cased) file extension to the function that parses its
+# contents into a Python dict. Adding another supported format is one
+# line — no branching logic elsewhere.
+_CONFIG_PARSERS: dict[str, Callable[[str], Any]] = {
+    ".yaml": yaml_safe_load,
+    ".yml": yaml_safe_load,
+    ".json": json_loads,
+}
 
 
 class Configuration:
@@ -45,15 +55,9 @@ class Configuration:
 
         # Check if a file name was provided
         if file:
-            # Ensure the file name is yaml or json
-            if file.suffix not in (".yaml", ".yml", ".json"):
-                self.log.bind(event="error").critical(
-                    "Configuration file '{file}' must have a '.json' or '.yaml' extension",
-                    file=file,
-                )
-                raise SystemExit(1)
-
-            # Read the configuration file into a dict
+            # Read the configuration file into a dict. _load_file validates
+            # the extension (and raises SystemExit on an unsupported one)
+            # so the suffix check lives in exactly one place.
             configuration = self._load_file(file=file)
 
             # Record the content hash so polling can detect real changes
@@ -94,35 +98,36 @@ class Configuration:
 
     def _load_file(self, file: Path) -> dict:
         """
-        Read configuration from the supplied JSON or YAML file into a dict
+        Read configuration from the supplied YAML or JSON file into a dict.
+
+        The file extension determines the parser (see ``_CONFIG_PARSERS``).
+        Matching is case-insensitive so ``foo.YAML`` works the same as
+        ``foo.yaml``.
         """
-        # Logging
+        suffix = file.suffix.lower()
+        parser = _CONFIG_PARSERS.get(suffix)
+        if parser is None:
+            self.log.bind(event="error").critical(
+                "Configuration file '{file}' must have one of these extensions: {exts}",
+                file=file,
+                exts=", ".join(sorted(_CONFIG_PARSERS)),
+            )
+            raise SystemExit(1)
+
         self.log.bind(event="info").debug(
-            "Loading configuration data from file '{file}'",
+            "Loading {fmt} configuration data from file '{file}'",
+            fmt=suffix[1:].upper(),
             file=file,
         )
 
-        # Check the file type
-        match file.suffix:
-            case file.suffix if file.suffix in (".yaml", ".yml"):
-                configuration = yaml_safe_load(file.read_text(encoding="utf-8"))
-            case ".json":
-                configuration = ujson.loads(file.read_text(encoding="utf-8"))
-            case _:
-                self.log.bind(event="error").critical(
-                    "Configuration file '{file}' does not have a valid extension",
-                    file=file,
-                )
-                raise SystemExit(1)
+        configuration = parser(file.read_text(encoding="utf-8"))
 
-        # Dump the configuration dict
         self.log.opt(lazy=True).bind(event="datadump").trace(
             "Read {file_type} data:\n{file_content}",
-            file_type=lambda: file.suffix[1:].upper(),
+            file_type=lambda: suffix[1:].upper(),
             file_content=lambda: pformat(configuration, indent=4, width=120),
         )
 
-        # Return the configuration dict
         return configuration
 
     @staticmethod

@@ -259,6 +259,53 @@ def test_is_modified_detects_content_change(tmp_path: Path):
     assert config.is_modified() is True
 
 
+def test_load_file_dispatches_yaml_and_json(tmp_path: Path):
+    """The parser dispatch table must handle both formats."""
+    yaml_cfg = tmp_path / "config.yaml"
+    yaml_cfg.write_text(
+        "checks:\n"
+        "  - name: t\n"
+        "    prefixes: [192.0.2.1/32]\n"
+        "    nexthop: 192.0.2.1\n"
+        "    args: {method: tcp, host: 192.0.2.1, port: 80}\n"
+    )
+    json_cfg = tmp_path / "config.json"
+    json_cfg.write_text(
+        '{"checks": [{"name": "t", "prefixes": ["192.0.2.1/32"], '
+        '"nexthop": "192.0.2.1", "args": {"method": "tcp", '
+        '"host": "192.0.2.1", "port": 80}}]}'
+    )
+
+    yaml_loaded = Configuration(log_context=logger.bind(check_name="t"), file=yaml_cfg)
+    json_loaded = Configuration(log_context=logger.bind(check_name="t"), file=json_cfg)
+    # Both should parse to the equivalent settings (same checks)
+    assert yaml_loaded.settings.checks[0].name == "t"
+    assert json_loaded.settings.checks[0].name == "t"
+    assert yaml_loaded.settings.checks[0].prefixes == json_loaded.settings.checks[0].prefixes
+
+
+def test_load_file_uppercase_extension(tmp_path: Path):
+    """Extension matching must be case-insensitive."""
+    cfg = tmp_path / "config.YAML"
+    cfg.write_text(
+        "checks:\n"
+        "  - name: t\n"
+        "    prefixes: [192.0.2.1/32]\n"
+        "    nexthop: 192.0.2.1\n"
+        "    args: {method: tcp, host: 192.0.2.1, port: 80}\n"
+    )
+    loaded = Configuration(log_context=logger.bind(check_name="t"), file=cfg)
+    assert loaded.settings.checks[0].name == "t"
+
+
+def test_load_file_unsupported_extension_exits(tmp_path: Path):
+    """An unsupported extension must raise SystemExit (no partial state)."""
+    cfg = tmp_path / "config.toml"
+    cfg.write_text("[checks]\nname = 't'\n")
+    with pytest.raises(SystemExit):
+        Configuration(log_context=logger.bind(check_name="t"), file=cfg)
+
+
 def test_reload_failure_does_not_hotloop_on_same_broken_bytes(tmp_path: Path):
     """After a failed reload, is_modified() should return False on the same bytes."""
     config_path = tmp_path / "config.yaml"
