@@ -1,6 +1,6 @@
 # ExaCheck Changelog
 
-## TBA - 0.1.7
+## 2026-05-22 - 0.1.7
 
 Fixes:
 
