@@ -4,6 +4,15 @@
 
 For additional information, deployment instructions and configuration examples please check the [ExaCheck website](https://exacheck.net).
 
+## Quick Links
+
+- [ExaCheck Homepage](https://exacheck.net)
+- [Deployment Guide - Python Package](https://exacheck.net/deployment/python/)
+- [Deployment Guide - Docker](https://exacheck.net/deployment/docker/)
+- [Upgrade Guide/Notes](https://exacheck.net/deployment/upgrading/)
+- [Configuration](https://exacheck.net/configuration/)
+- [Change Log](https://github.com/exacheck/exacheck/blob/main/CHANGELOG.md)
+
 ## Why ExaCheck
 
 ExaBGP is packaged with its own health checking script ([see here](https://github.com/Exa-Networks/exabgp/blob/main/src/exabgp/application/healthcheck.py)) however it has some limitations which make it not suitable for my requirements. The built in health check works fine for smaller environments where each service may be running its own instance of ExaBGP (so each instance of ExaBGP runs one or only a few processes) however for larger environments where health checks are centralised it becomes unmanageable.
