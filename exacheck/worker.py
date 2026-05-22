@@ -260,7 +260,9 @@ class Worker:
             # degraded (re-announce with restored metric); the announcer is
             # idempotent and ExaBGP treats a second announce as an attribute
             # update.
-            was_degraded = state.advertised and state.current_metric != self.check.metric
+            was_degraded = (
+                state.advertised and state.current_metric != self.check.metric
+            )
             if was_degraded:
                 self.log.bind(event="announce").success(
                     "Health check successful and service has risen; metric will be restored to normal"
@@ -414,7 +416,8 @@ class Worker:
             return
 
         self.log.bind(event="debug").debug(
-            "Announcing route at up metric ({metric})", metric=self.check.metric,
+            "Announcing route at up metric ({metric})",
+            metric=self.check.metric,
         )
         self.announcer.announce(metric=self.check.metric)
 

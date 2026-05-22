@@ -224,10 +224,12 @@ class Notifications:
             tags=", ".join(tags),
         )
         log.bind(event="datadump").trace(
-            "Notification title: {title}", title=title,
+            "Notification title: {title}",
+            title=title,
         )
         log.bind(event="datadump").trace(
-            "Notification message: {message}", message=message,
+            "Notification message: {message}",
+            message=message,
         )
 
         # Make sure a sender thread exists for this process (lazy on first
@@ -281,7 +283,8 @@ class Notifications:
                     delivered = self.apprise.notify(**spec)
                 except Exception as exc:  # pylint: disable=broad-except
                     log.bind(event="error").error(
-                        "Failed to send notification: {error}", error=exc,
+                        "Failed to send notification: {error}",
+                        error=exc,
                     )
                 else:
                     # apprise.notify returns True only if *every* configured

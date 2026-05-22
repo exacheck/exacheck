@@ -93,9 +93,7 @@ class Sleeper:
 
         if self._wakeup_event is not None:
             if self._wakeup_event.wait(timeout=self._sleep_time):
-                self.log.bind(event="info").debug(
-                    "Sleep interrupted by wakeup event"
-                )
+                self.log.bind(event="info").debug("Sleep interrupted by wakeup event")
                 return
         else:
             sleep(self._sleep_time)
