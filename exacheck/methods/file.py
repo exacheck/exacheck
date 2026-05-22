@@ -48,33 +48,14 @@ class File(Base):
                 exception=exc,
             )
 
-        if exists:
-            # File exists; check if it should
-            if self.args.exists:
-                # File should be existing and it does, return the check result
-                return CheckResult(
-                    success=True,
-                    message=f"File {self.args.path} exists",
-                )
-
-            # File should not be existing and it does, return
-            return CheckResult(
-                success=False,
-                message=f"File {self.args.path} exists",
-                error=f"The file {self.args.path} must not exist",
-            )
-
-        # File does not exist, check if it should
-        if self.args.exists:
-            # File should be existing and it doesn't, return
-            return CheckResult(
-                success=False,
-                message=f"File {self.args.path} does not exist",
-                error=f"The file {self.args.path} must exist",
-            )
-
-        # File should not be existing and it does, return
+        ok = exists == self.args.exists
+        state = "exists" if exists else "does not exist"
         return CheckResult(
-            success=True,
-            message=f"File {self.args.path} does not exist",
+            success=ok,
+            message=f"File {self.args.path} {state}",
+            error=(
+                None
+                if ok
+                else f"The file {self.args.path} must {'' if self.args.exists else 'not '}exist"
+            ),
         )
