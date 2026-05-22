@@ -227,8 +227,10 @@ class Remote(Base, ABC):
             # Raise the DNS resolution error
             raise DNSResolutionError(message=message) from exc
 
-        # Retrieve the list of IP addresses from addrinfo, deduplicated
-        addresses = {ai[4][0] for ai in addrinfo}
+        # Retrieve the list of IP addresses from addrinfo, deduplicated.
+        # ai[4][0] is the host element of the sockaddr tuple — always a str
+        # at runtime, but type stubs widen it to str | int, so coerce.
+        addresses: set[str] = {str(ai[4][0]) for ai in addrinfo}
 
         # Log the DNS resolution information
         self.log.opt(lazy=True).bind(event="datadump").trace(

@@ -53,17 +53,23 @@ class HTTP(Remote):
         """
         Validate the HTTP response received
         """
-        # Check if a specific response code is required; if so validate it matches
-        if (
-            self.args.expected_status
-            and response.status_code not in self.args.expected_status
-        ):
+        # Check if a specific response code is required; if so validate it matches.
+        # The args model's mode="before" validator coerces a bare int into a
+        # list[int], so post-validation the value is always Optional[list[int]]
+        # — but the field type is still the wider union, so bind to a local
+        # after the coercion guarantee to give type checkers a clean view.
+        expected_status: list[int] | None = (
+            [self.args.expected_status]
+            if isinstance(self.args.expected_status, int)
+            else self.args.expected_status
+        )
+        if expected_status and response.status_code not in expected_status:
             return CheckResult(
                 success=False,
                 message=f"HTTP status code {response.status_code} does not match expected status code(s)",
                 error=(
                     f"{response.status_code} not listed in the status codes: "
-                    f"{', '.join(map(str, self.args.expected_status))}"
+                    f"{', '.join(map(str, expected_status))}"
                 ),
             )
 

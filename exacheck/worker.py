@@ -311,6 +311,7 @@ class Worker:
         # A disable file is a manual override — the routes are fully withdrawn
         # regardless of whether metric_down is configured.
         if result.disabled:
+            since: datetime | None
             if state.advertised:
                 self.log.bind(event="withdraw").warning(
                     "Service has been disabled; prefixes will be withdrawn"
@@ -598,11 +599,16 @@ class Worker:
         if self.config_queue is None:
             return
 
+        # config_queue is typed as Optional[object] so tests can pass a
+        # MagicMock without satisfying multiprocessing.Queue's full surface.
+        # At runtime here it's the real Queue (or a mock that duck-types
+        # ``get_nowait``); silence the attribute check.
+        queue = self.config_queue
         latest_check: Optional[Check] = None
         latest_notifications: Optional[NotificationsUpdate] = None
         try:
             while True:
-                msg = self.config_queue.get_nowait()
+                msg = queue.get_nowait()  # type: ignore[attr-defined]
                 if isinstance(msg, NotificationsUpdate):
                     latest_notifications = msg
                 elif isinstance(msg, Check):

@@ -174,9 +174,10 @@ class LogManager:
                 else:
                     protocol = SOCK_DGRAM
 
-                # Create the log handler
+                # Create the log handler. destination is typed Literal | FilePath | str,
+                # so coerce to str for the (host, port) socket tuple.
                 handler = logging.handlers.SysLogHandler(
-                    address=(config.destination, config.port),
+                    address=(str(config.destination), config.port),
                     socktype=protocol,
                 )
 

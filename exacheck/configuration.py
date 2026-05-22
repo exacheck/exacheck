@@ -171,11 +171,14 @@ class Configuration:
         actually change.
         """
         # Hash the current file contents first so that even on failure we
-        # avoid hot-looping on the same broken bytes.
-        new_hash = self._hash_file(self.settings.file)
+        # avoid hot-looping on the same broken bytes. reload() is only called
+        # for file-backed configs, so file is guaranteed non-None here.
+        config_file = self.settings.file
+        assert config_file is not None
+        new_hash = self._hash_file(config_file)
 
         try:
-            configuration = self._load_file(file=self.settings.file)
+            configuration = self._load_file(file=config_file)
         except Exception as exc:
             self.log.bind(event="error").error(
                 "Configuration file has been modified but could not be parsed: {exc}",

@@ -142,3 +142,4 @@ class Settings(Base):
         for check in self.checks:
             if check.name == name:
                 return check
+        return None

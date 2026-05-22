@@ -80,14 +80,14 @@ class Syslog(Base):
                         f"Logging destination {destination} is not a socket"
                     )
 
-                # Convert the destination into a file path
-                destination = Path(destination).resolve()
-                assert isinstance(destination, Path)
-
-                # Make sure the socket is writable
-                if not os.access(destination, os.W_OK):
+                # Resolve symlinks before the writability check; keep the
+                # original string in ``destination`` so the declared return
+                # type still holds and the returned value matches what the
+                # user configured.
+                socket_path = Path(destination).resolve()
+                if not os.access(socket_path, os.W_OK):
                     raise ValueError(
-                        f"Destination logging socket {destination} is not writable"
+                        f"Destination logging socket {socket_path} is not writable"
                     )
 
             # Test if it is a hostname
@@ -100,7 +100,5 @@ class Syslog(Base):
                         f"Invalid destination address '{destination}' for syslog messages"
                     )
 
-        # Return as it seems to be valid enough to use (coerce Path → str
-        # since the resolved-socket branch above reassigns destination to a
-        # Path object and the declared return type is the original string).
-        return str(destination)
+        # Return as it seems to be valid enough to use
+        return destination
