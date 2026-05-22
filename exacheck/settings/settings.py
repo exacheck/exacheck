@@ -113,13 +113,14 @@ class Settings(Base):
         # Loop through each logger
         for logger in logging:
             # Skip if no check filters defined
-            if not logger.checks:
+            checks = logger.checks
+            if not checks:
                 continue
 
             # Check if undefined check names have been set
             if undefined := [
                 check_name
-                for check_name in logger.checks
+                for check_name in checks
                 if check_name not in check_names
             ]:
                 if logger.method == "file":

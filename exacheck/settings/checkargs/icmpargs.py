@@ -103,7 +103,7 @@ class ICMPArgs(Remote):
         count: int = values.data["count"] if "count" in values.data else 3
 
         # Check that count * interval would be below the check timeout
-        if (count * interval) > values.data["timeout"]:
+        if (count * float(interval)) > values.data["timeout"]:
             raise ValueError(
                 f"Invalid interval '{interval}' or count '{count}' defined for check: "
                 f"The total time must be lower than the configured check timeout of {values.data['timeout']} seconds."
@@ -130,7 +130,7 @@ class ICMPArgs(Remote):
         )
 
         # Get the maximum possible time that the check could run if all requests timed out
-        maximum_runtime = (count * icmp_timeout) + (interval * (count - 1))
+        maximum_runtime = (count * float(icmp_timeout)) + (float(interval) * (count - 1))
 
         # Check if the maximum run time is higher than the timeout
         if maximum_runtime > values.data["timeout"]:
@@ -176,7 +176,7 @@ class ICMPArgs(Remote):
         )
 
         # Verify that the max latency is less than the ICMP timeout
-        if max_latency >= timeout:
+        if max_latency >= float(timeout):
             raise ValueError(
                 f"Invalid max latency '{max_latency}' defined for check: "
                 f"It must be less than the ICMP timeout ({timeout})"

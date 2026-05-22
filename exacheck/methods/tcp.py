@@ -24,13 +24,12 @@ class TCP(Remote):
 
     method_name = "tcp"
     args_model = TCPArgs
+    args: TCPArgs  # pyre-ignore[13]: narrows the parent's args type; init happens in Base
 
     def check_one(self, addr: str) -> CheckResult:
         """
         Run a TCP health check to the supplied IP address
         """
-        # Set type for MyPy
-        self.args: TCPArgs
 
         # Create IP address object
         ipaddr = ip_address(addr)

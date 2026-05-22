@@ -64,6 +64,11 @@ class ExaCheck:
     ExaCheck main class
     """
 
+    # Set later by run() / cleanup(); declared here so type checkers don't flag
+    # the cross-method assignments and reads.
+    jobs: list[Tuple[Check, Process]]  # pyre-ignore[13]
+    procname: ProcName  # pyre-ignore[13]
+
     def __init__(
         self,
         file: Path,
@@ -132,6 +137,11 @@ class ExaCheck:
         # Set by the SIGHUP handler; read by the monitoring loop to trigger a
         # reload outside of the mtime/content poll.
         self._reload_requested = False
+
+        # Tracks whether a termination signal has begun the shutdown sequence,
+        # so a second signal re-entering cleanup() is a no-op rather than
+        # racing the first one.
+        self._shutting_down = False
 
         # Log finish of setup
         self.log.bind(event="debug").info("ExaCheck object setup complete")

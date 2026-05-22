@@ -114,6 +114,10 @@ class Worker:
             base=f"ExaCheck Worker [{self.check.name}]",
             log_context=self.log,
         )
+        # procname stays non-None for the lifetime of run(); the Optional
+        # declaration on __init__ exists so tests can construct a Worker
+        # without mutating the test process's title via setproctitle.
+        assert self.procname is not None
         self.procname.update(message="Startup")
 
         # Default SIGALRM to a no-op. CheckExecutor swaps in its

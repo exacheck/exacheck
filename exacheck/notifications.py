@@ -113,19 +113,22 @@ class Notifications:
                 events=", ".join(target.events),
             )
 
-            # Check if the target has a list of checks to notify on
-            if target.checks:
+            # Check if the target has a list of checks to notify on.
+            # Bind to a local so the type narrows from Optional[list[str]] to
+            # list[str] for the duration of the branch.
+            target_checks = target.checks
+            if target_checks:
                 # Log there is filtering
                 self.log.bind(event="debug").trace(
                     "Notification target will be filtered to the following checks: {checks}",
-                    checks=", ".join(target.checks),
+                    checks=", ".join(target_checks),
                 )
 
                 # Create the list of tags for filtering to work
                 tags = [
                     f"{check}-{event}"
                     for event in target.events
-                    for check in target.checks
+                    for check in target_checks
                 ]
 
             else:
@@ -307,7 +310,8 @@ class Notifications:
         queue is not empty. Safe to call when there is no thread running
         (e.g. on a noop Notifications instance or before any notify call).
         """
-        if self._thread is None or not self._thread.is_alive():
+        thread = self._thread
+        if thread is None or not thread.is_alive():
             return
         self._queue.put(None)
-        self._thread.join(timeout=timeout)
+        thread.join(timeout=timeout)

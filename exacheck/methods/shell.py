@@ -24,6 +24,7 @@ class Shell(Base):
 
     method_name = "shell"
     args_model = ShellArgs
+    args: ShellArgs  # pyre-ignore[13]: narrows the parent's args type; init happens in Base
 
     @staticmethod
     def _to_str(
@@ -44,8 +45,6 @@ class Shell(Base):
         """
         Run the health check
         """
-        # Set type for MyPy
-        self.args: ShellArgs
 
         # Execute the command. capture_output is required because the parent's
         # stdout is the ExaBGP command channel; without it the child would

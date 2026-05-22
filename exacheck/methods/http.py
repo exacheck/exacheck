@@ -24,13 +24,12 @@ class HTTP(Remote):
 
     method_name = "http"
     args_model = HTTPArgs
+    args: HTTPArgs  # pyre-ignore[13]: narrows the parent's args type; init happens in Base
 
     def check_one(self, addr: str) -> CheckResult:
         """
         Run the HTTP health check
         """
-        # Set type for MyPy
-        self.args: HTTPArgs
 
         # Send the HTTP request and get response
         try:
@@ -145,15 +144,18 @@ class HTTP(Remote):
         # Set user agent header
         headers["User-Agent"] = self.args.user_agent
 
-        # If the address to check is not an IP address set the host header
-        if self.args.url.host and not self._is_ip(self.args.url.host):
-            # Host isn't an IP; set host header
-            headers["Host"] = self.args.url.host
+        # If the address to check is not an IP address set the host header.
+        # Bind to a local so the type narrows once across the branch — attribute
+        # access through self.args is treated as potentially-Optional each time.
+        url_host = self.args.url.host
+        if url_host and not self._is_ip(url_host):
+            headers["Host"] = url_host
 
         # Add any extra headers if required
         # As the values may be an integer/float, coerce them into a string
-        if self.args.headers:
-            for k, val in self.args.headers.items():
+        extra_headers = self.args.headers
+        if extra_headers:
+            for k, val in extra_headers.items():
                 headers[k] = f"{val}"
 
         # Log the headers that will be used
@@ -227,18 +229,19 @@ class HTTP(Remote):
             return None
 
         # If there is no host available, skip
-        if not self.args.url.host:
+        host = self.args.url.host
+        if not host:
             return None
 
         # If the host is an IP address, skip
-        if self._is_ip(self.args.url.host):
+        if self._is_ip(host):
             return None
 
         # Create empty dict of extensions
         extensions: dict[str, str] = {}
 
         # Set up the SNI extension
-        extensions["sni"] = self.args.url.host
+        extensions["sni"] = host
 
         # Return the extensions
         return extensions

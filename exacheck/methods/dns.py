@@ -25,13 +25,12 @@ class DNS(Remote):
 
     method_name = "dns"
     args_model = DNSArgs
+    args: DNSArgs  # pyre-ignore[13]: narrows the parent's args type; init happens in Base
 
     def check_one(self, addr: str) -> CheckResult:  # NOSONAR
         """
         Run the health check
         """
-        # Set type for MyPy
-        self.args: DNSArgs
 
         # Send request to the DNS server
         try:
@@ -86,14 +85,17 @@ class DNS(Remote):
         """
         Search for a pattern in the DNS response
         """
-        # Set type for MyPy
         assert isinstance(response.rrset, RRset)
-        assert isinstance(self.args.response, Pattern)
+        # Bind to a local so type checkers can narrow once across the loop —
+        # an attribute lookup like `self.args.response` is treated as
+        # potentially-Optional on every access.
+        pattern = self.args.response
+        assert isinstance(pattern, Pattern)
 
         # Loop over each answer in the response and look for the response pattern
         self.log.bind(event="debug").debug(
             "Searching DNS response for a match to response pattern: {pattern}",
-            pattern=self.args.response.pattern,
+            pattern=pattern.pattern,
         )
         for answer in [answer.to_text() for answer in response.rrset]:
             # Test if the answer matches
@@ -101,7 +103,7 @@ class DNS(Remote):
                 "Testing answer: {answer}",
                 answer=answer,
             )
-            if self.args.response.match(answer):
+            if pattern.match(answer):
                 # Match found
                 return CheckResult(
                     success=True,

@@ -214,8 +214,9 @@ class LogManager:
         Generate the log format string for the supplied log configuration
         """
         # Return the user defined format if set
-        if config.formatter:
-            return config.formatter
+        formatter = config.formatter
+        if formatter:
+            return formatter
 
         # Create a list of fields to include in the log format
         fields: list[tuple[str, str]] = []
@@ -287,10 +288,8 @@ class LogManager:
         # Create set of events, subsystems and check names to log
         events = set(config.events)
         subsystems = set(config.subsystems)
-        if config.checks:
-            checks = set(config.checks)
-        else:
-            checks = set()
+        config_checks = config.checks
+        checks = set(config_checks) if config_checks else set()
 
         # If the log is structured or to syslog, data dumping is not permitted
         if config.structured or isinstance(config, Syslog):

@@ -27,6 +27,8 @@ class Remote(Base, ABC):
     The remote base health check class
     """
 
+    args: RemoteArgs  # narrows the parent's args type; init happens in Base
+
     class AddressFamilies(Enum):
         """
         Create enum for lookups of address families from the string IPv4/IPv6 to a socket object
@@ -70,8 +72,6 @@ class Remote(Base, ABC):
         """
         Loop over each IP address and perform the health check
         """
-        # Inform MyPy that the check args are for a remote check
-        self.args: RemoteArgs
         assert isinstance(self.args.host, str)
 
         # Resolve the host into a list of IP addresses

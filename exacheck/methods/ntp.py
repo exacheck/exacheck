@@ -26,13 +26,12 @@ class NTP(Remote):
 
     method_name = "ntp"
     args_model = NTPArgs
+    args: NTPArgs  # pyre-ignore[13]: narrows the parent's args type; init happens in Base
 
     def check_one(self, addr: str) -> CheckResult:
         """
         Run the health check
         """
-        # Set type for MyPy
-        self.args: NTPArgs
 
         # Send the NTP request and get response
         try:

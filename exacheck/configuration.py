@@ -64,7 +64,10 @@ class Configuration:
             # (insensitive to mtime touches that don't alter the bytes).
             self.content_hash = self._hash_file(file)
 
-        # Parse the configuration into a Settings object
+        # Parse the configuration into a Settings object. At this point
+        # ``configuration`` is non-None — either the user passed it in or
+        # _load_file produced it above.
+        assert configuration is not None
         try:
             self.settings = Settings(**configuration, file=file)
         except ValidationError as exc:

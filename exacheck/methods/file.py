@@ -22,13 +22,12 @@ class File(Base):
 
     method_name = "file"
     args_model = FileArgs
+    args: FileArgs  # pyre-ignore[13]: narrows the parent's args type; init happens in Base
 
     def check(self) -> CheckResult:  # NOSONAR
         """
         Run the health check
         """
-        # Set type for MyPy
-        self.args: FileArgs
 
         # Ensure path can be read
         if not access(self.args.path.parent, R_OK):

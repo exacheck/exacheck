@@ -100,5 +100,7 @@ class Syslog(Base):
                         f"Invalid destination address '{destination}' for syslog messages"
                     )
 
-        # Return as it seems to be valid enough to use
-        return destination
+        # Return as it seems to be valid enough to use (coerce Path → str
+        # since the resolved-socket branch above reassigns destination to a
+        # Path object and the declared return type is the original string).
+        return str(destination)

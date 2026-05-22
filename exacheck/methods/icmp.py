@@ -23,13 +23,12 @@ class ICMP(Remote):
 
     method_name = "icmp"
     args_model = ICMPArgs
+    args: ICMPArgs  # pyre-ignore[13]: narrows the parent's args type; init happens in Base
 
     def check_one(self, addr: str) -> CheckResult:
         """
         Run the ICMP health check
         """
-        # Set type for MyPy
-        self.args: ICMPArgs
 
         # Send the ping/ICMP request and get response
         try:
