@@ -27,7 +27,7 @@ keywords = [
 name = "exacheck"
 readme = "README.md"
 repository = "https://github.com/exacheck/exacheck"
-version = "0.1.6"
+version = "0.1.7"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
@@ -43,10 +43,10 @@ exacheck = 'exacheck.cli:cli'
 
 [tool.poetry.dependencies]
 # Python version required
-python = ">=3.11,<=3.14"
+python = ">=3.11,<3.14"
 
 # ExaBGP itself
-exabgp = "^4.2.25"
+exabgp = "^5.0.9"
 
 # General ExaCheck requirements
 apprise = "^1.9.2"
@@ -54,7 +54,7 @@ loguru = "^0.7.3"
 pydantic = {extras = ["timezone"], version = "^2.11.0b1"}
 pyyaml = "^6.0.2"
 setproctitle = "^1.3.5"
-tabulate = "^0.9.0"
+tabulate = "^0.10.0"
 ujson = "^5.10.0"
 
 # Requirements for the built in health checks

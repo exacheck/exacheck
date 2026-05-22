@@ -57,13 +57,13 @@ class Notifications:
         # Perform setup
         self._setup(configuration=configuration)
 
-        # Create the list of notification types/levels for themes
-        self._types = (
-            ("announce", apprise.NotifyType.SUCCESS),
-            ("withdraw", apprise.NotifyType.WARNING),
-            ("error", apprise.NotifyType.FAILURE),
-            ("info", apprise.NotifyType.INFO),
-        )
+        # Map event names to Apprise notification levels
+        self._types = {
+            "announce": apprise.NotifyType.SUCCESS,
+            "withdraw": apprise.NotifyType.WARNING,
+            "error": apprise.NotifyType.FAILURE,
+            "info": apprise.NotifyType.INFO,
+        }
 
     def _setup(self, configuration: list[NotificationSettings]):
         """
@@ -209,12 +209,8 @@ class Notifications:
         else:
             tags = [f"_general_-{event}"]
 
-        # Get the notification type
-        notification_type = [
-            notify_type
-            for notify_event, notify_type in self._types
-            if notify_event == event
-        ][0]
+        # Map the event name to its Apprise notification level
+        notification_type = self._types.get(event, apprise.NotifyType.INFO)
 
         # Send the notification
         log.bind(event="debug").debug(

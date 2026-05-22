@@ -49,7 +49,7 @@ class CheckResult(BaseModel):
     date: datetime = Field(
         title="Check Date",
         description="The date and time the check was performed",
-        default=datetime.now(),
+        default_factory=datetime.now,
     )
 
     disabled: bool = Field(

@@ -44,13 +44,16 @@ class Shell(Base):
         # Set type for MyPy
         self.args: ShellArgs
 
-        # Execute the command
+        # Execute the command. capture_output is required because the parent's
+        # stdout is the ExaBGP command channel; without it the child would
+        # inherit that stdout and corrupt the route stream.
         try:
             result = subprocess.run(  # nosemgrep:python.lang.security.audit.subprocess-shell-true.subprocess-shell-true
                 self.args.command,
                 check=True,
                 shell=True,
                 env=self.args.environment,
+                capture_output=True,
             )
         except subprocess.CalledProcessError as error:
             # Convert stdout/stderr to strings if defined

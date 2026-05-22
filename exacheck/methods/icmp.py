@@ -149,10 +149,8 @@ class ICMP(Remote):
         success = True
 
         # Check if the number of packets lost is within the allowed range
-        if (
-            lost := response.packets_sent - response.packets_received
-            > self.args.max_loss
-        ):
+        lost = response.packets_sent - response.packets_received
+        if lost > self.args.max_loss:
             success = False
             message = (
                 f"Packets lost ({lost}) exceeds maximum limit of {self.args.max_loss}"
@@ -174,7 +172,7 @@ class ICMP(Remote):
             and response.jitter > self.args.max_jitter
         ):
             success = False
-            message = f"Maximum jitter ({response.max_rtt}ms) exceeds limit of {self.args.max_jitter}ms"
+            message = f"Maximum jitter ({response.jitter}ms) exceeds limit of {self.args.max_jitter}ms"
             self.log.bind(event="debug").error(message)
             errors.append(message)
 

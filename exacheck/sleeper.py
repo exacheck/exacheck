@@ -87,24 +87,20 @@ class Sleeper:
             "Calculated iteration took {elapsed:.5f} seconds", elapsed=elapsed
         )
 
-        # Check if the iteration took longer than the interval
-        if elapsed > self._interval:
+        # If the iteration over-ran the interval, run the next iteration
+        # immediately (no sleep) instead of forcing a fixed 1 second floor —
+        # the configured interval is the contract.
+        if elapsed >= self._interval:
             self.log.bind(event="info").warning(
-                "Iteration took longer than the specified sleep interval; sleep time will be set to 1 second"
+                "Iteration took {elapsed:.5f}s which exceeds the configured interval of {interval}s; "
+                "next iteration will run immediately",
+                elapsed=elapsed,
+                interval=self._interval,
             )
-            return 1
+            return 0
 
-        # Calculate the remaining time left in the interval
+        # Return the remaining time left in the interval
         remaining = self._interval - elapsed
-
-        # If the remaining time is less than 1 second, set it to 1 second
-        if remaining < 1:
-            self.log.bind(event="info").warning(
-                "Iteration sleep time is less than 1 second; sleep time will be set to 1 second"
-            )
-            return 1
-
-        # Return the expected sleep time
         self.log.bind(event="debug").trace(
             "Calculated sleep interval for iteration: {remaining:.5f}",
             remaining=remaining,
