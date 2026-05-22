@@ -16,6 +16,9 @@ jobs:
       shell: bash
       run: echo "release-version=$(echo ${GITHUB_REF:10})" >> $GITHUB_OUTPUT
 
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
     - name: Publish to Registry
       uses: elgohr/Publish-Docker-Github-Action@v5
       with:
@@ -23,4 +26,5 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
         buildoptions: "--build-arg EXACHECK_VERSION=${{ steps.pre-step.outputs.release-version }}"
+        platforms: linux/amd64,linux/arm64
         tags: "latest,${{ steps.pre-step.outputs.release-version }}"
