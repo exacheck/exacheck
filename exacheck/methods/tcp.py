@@ -22,6 +22,9 @@ class TCP(Remote):
     Run a health check to a TCP port to ensure it is listening
     """
 
+    method_name = "tcp"
+    args_model = TCPArgs
+
     def check_one(self, addr: str) -> CheckResult:
         """
         Run a TCP health check to the supplied IP address

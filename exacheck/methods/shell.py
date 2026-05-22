@@ -22,6 +22,9 @@ class Shell(Base):
     Run a shell command health check
     """
 
+    method_name = "shell"
+    args_model = ShellArgs
+
     @staticmethod
     def _to_str(
         stdout: bytes | None, stderr: bytes | None

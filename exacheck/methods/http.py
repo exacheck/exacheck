@@ -22,6 +22,9 @@ class HTTP(Remote):
     Run a HTTP health check
     """
 
+    method_name = "http"
+    args_model = HTTPArgs
+
     def check_one(self, addr: str) -> CheckResult:
         """
         Run the HTTP health check

@@ -15,7 +15,7 @@ from pprint import pformat
 from typing import Literal
 from ipaddress import ip_address, IPv4Address
 
-from ..settings.checkargs import CheckArgsRemote
+from ..settings.checkargs._remote import Remote as RemoteArgs
 from ..exceptions.dnsresolutionerror import DNSResolutionError
 from ..exceptions.addressfamilyerror import AddressFamilyError
 from ..checkresult import CheckResult
@@ -71,7 +71,7 @@ class Remote(Base, ABC):
         Loop over each IP address and perform the health check
         """
         # Inform MyPy that the check args are for a remote check
-        self.args: CheckArgsRemote
+        self.args: RemoteArgs
         assert isinstance(self.args.host, str)
 
         # Resolve the host into a list of IP addresses

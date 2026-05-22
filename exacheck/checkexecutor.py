@@ -15,7 +15,7 @@ import loguru
 from .checkresult import CheckResult
 from .exceptions.checktimeout import CheckTimeout
 from .exceptions.dnsresolutionerror import DNSResolutionError
-from .methods import CheckMethods
+from .methods._base import Base as CheckMethod
 
 
 # pylint: disable=too-few-public-methods
@@ -24,11 +24,11 @@ class CheckExecutor:
     The ExaCheck executor that will run a supplied health check and process the result in to a CheckResult
     """
 
-    def __init__(self, method: CheckMethods, log_context: loguru.Logger):
+    def __init__(self, method: CheckMethod, log_context: loguru.Logger):
         """Create the health check executor object
 
         Args:
-            method (CheckMethods): The list of available health check methods that are supported
+            method (CheckMethod): The health check method instance to execute
             log_context (loguru.Logger): The loguru logging context
         """
         # Set the logging context

@@ -23,6 +23,9 @@ class DNS(Remote):
     Run a DNS health check
     """
 
+    method_name = "dns"
+    args_model = DNSArgs
+
     def check_one(self, addr: str) -> CheckResult:  # NOSONAR
         """
         Run the health check

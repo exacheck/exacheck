@@ -21,6 +21,9 @@ class ICMP(Remote):
     Run a ICMP health check
     """
 
+    method_name = "icmp"
+    args_model = ICMPArgs
+
     def check_one(self, addr: str) -> CheckResult:
         """
         Run the ICMP health check

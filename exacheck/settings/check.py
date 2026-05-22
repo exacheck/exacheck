@@ -15,7 +15,7 @@ from ipaddress import (
     IPv6Network,
 )
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal, Optional, Union
 
 from pydantic import (
     Field,
@@ -31,13 +31,7 @@ from pydantic_core.core_schema import ValidationInfo
 from typing_extensions import Annotated
 
 from ._base import Base
-from .checkargs.dnsargs import DNSArgs
-from .checkargs.fileargs import FileArgs
-from .checkargs.httpargs import HTTPArgs
-from .checkargs.icmpargs import ICMPArgs
-from .checkargs.ntpargs import NTPArgs
-from .checkargs.shellargs import ShellArgs
-from .checkargs.tcpargs import TCPArgs
+from .checkargs._base import Base as ArgsBase
 
 
 class Check(Base):
@@ -57,12 +51,14 @@ class Check(Base):
         default=None,
     )
 
-    args: DNSArgs | FileArgs | HTTPArgs | ICMPArgs | NTPArgs | ShellArgs | TCPArgs = (
-        Field(
-            title="Check Arguments",
-            description="The arguments for the health check check",
-            discriminator="method",
-        )
+    # The concrete type of this field is built dynamically at module load time
+    # by ``_finalize_args_union`` below: a discriminated union over every check
+    # method's args model, as advertised by the ``method`` discriminator. The
+    # ``ArgsBase`` annotation here is just a placeholder so the class body is
+    # importable before the methods package has been initialised.
+    args: ArgsBase = Field(
+        title="Check Arguments",
+        description="The arguments for the health check check",
     )
 
     path_id: Optional[
@@ -313,3 +309,31 @@ class Check(Base):
 
         # Return the next hop
         return nexthop
+
+
+def _finalize_args_union() -> None:
+    """
+    Rewrite ``Check.args`` as a discriminated union over every registered
+    check method's args model and rebuild the model.
+
+    Keeps ``schema.json`` emitting the full per-method variant schema without
+    requiring this module to enumerate methods by hand. Importing
+    ``exacheck.methods`` triggers its auto-discovery, which populates the
+    method registry on ``Base._registry``.
+    """
+    # pylint: disable=import-outside-toplevel,protected-access
+    from .. import methods
+
+    registry = methods.Base._registry
+    if not registry:
+        return
+
+    arg_models = tuple(cls.args_model for cls in registry.values())
+    # mypy can't see a tuple-of-classes as a Union argument; it's valid at runtime.
+    union = Annotated[Union[arg_models], Field(discriminator="method")]  # type: ignore[valid-type]
+    Check.__annotations__["args"] = union
+    Check.model_fields["args"].annotation = union  # type: ignore[assignment]
+    Check.model_rebuild(force=True)
+
+
+_finalize_args_union()

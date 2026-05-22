@@ -24,6 +24,9 @@ class NTP(Remote):
     Run a NTP health check
     """
 
+    method_name = "ntp"
+    args_model = NTPArgs
+
     def check_one(self, addr: str) -> CheckResult:
         """
         Run the health check

@@ -202,27 +202,24 @@ class Worker:
             # Sleep for the remaining time
             sleeper.sleep()
 
-    def _build_method(self) -> methods.CheckMethods:
+    def _build_method(self) -> methods.Base:
         """
         Construct and return a check-method instance for the requested type.
 
         Allocates a new instance every call, so do not invoke from a hot path.
         ``run()`` calls this exactly once when building the CheckExecutor.
         """
-        # Ensure the check method is available
-        if self.check_method not in methods.METHODS:
+        try:
+            cls = methods.get(self.check_method)
+        except KeyError as exc:
             self.log.bind(event="error").critical(
                 "No health check method '{method}' available",
                 method=self.check_method,
             )
             raise NotImplementedError(
                 f"Could not get check method: {self.check_method}"
-            )
+            ) from exc
 
-        # Look up the class for the check
-        _, cls = methods.METHODS[self.check_method]
-
-        # Set up and return the check
         return cls(
             log_context=self.log,
             args=self.check.args,

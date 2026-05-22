@@ -20,6 +20,9 @@ class File(Base):
     Run a file path health check
     """
 
+    method_name = "file"
+    args_model = FileArgs
+
     def check(self) -> CheckResult:  # NOSONAR
         """
         Run the health check

@@ -17,6 +17,13 @@ class Base(ABC, BaseModel):
     Base model for check arguments
     """
 
+    # Concrete subclasses narrow this to ``Literal["dns"]`` etc.; declaring it
+    # here means consumers can read ``args.method`` without needing the static
+    # type to be the dynamically-built discriminated union.
+    method: str = Field(
+        title="Check Method",
+        description="The check method type identifier",
+    )
     timeout: PositiveInt = Field(
         title="General Check Timeout",
         description="The total timeout in seconds for the check to execute",

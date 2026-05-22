@@ -257,6 +257,12 @@
             "additionalProperties": false,
             "description": "Model for DNS check arguments",
             "properties": {
+                "method": {
+                    "const": "dns",
+                    "description": "Send a query to a DNS server and optionally validate the response",
+                    "title": "DNS Check Method",
+                    "type": "string"
+                },
                 "timeout": {
                     "default": 10,
                     "description": "The total timeout in seconds for the check to execute",
@@ -291,12 +297,6 @@
                     "description": "If checking a hostname, require all IP addresses from the DNS response to pass the health check. If False, any single IP address that returns a successful check will return the service as healthy.",
                     "title": "All IP Addresses Valid",
                     "type": "boolean"
-                },
-                "method": {
-                    "const": "dns",
-                    "description": "Send a query to a DNS server and optionally validate the response",
-                    "title": "DNS Check Method",
-                    "type": "string"
                 },
                 "query": {
                     "description": "The name to query",
@@ -372,8 +372,8 @@
                 }
             },
             "required": [
-                "host",
                 "method",
+                "host",
                 "query"
             ],
             "title": "Check Arguments",
@@ -412,18 +412,18 @@
             "additionalProperties": false,
             "description": "Model for file check arguments",
             "properties": {
+                "method": {
+                    "const": "file",
+                    "description": "Test if a file exists or doesn't exist",
+                    "title": "File Check Method",
+                    "type": "string"
+                },
                 "timeout": {
                     "default": 10,
                     "description": "The total timeout in seconds for the check to execute",
                     "exclusiveMinimum": 0,
                     "title": "General Check Timeout",
                     "type": "integer"
-                },
-                "method": {
-                    "const": "file",
-                    "description": "Test if a file exists or doesn't exist",
-                    "title": "File Check Method",
-                    "type": "string"
                 },
                 "path": {
                     "description": "The path to the file that should be checked",
@@ -449,6 +449,12 @@
             "additionalProperties": false,
             "description": "Model for HTTP check arguments",
             "properties": {
+                "method": {
+                    "const": "http",
+                    "description": "Send a HTTP or HTTPS request to a web server and optionally perform various validation",
+                    "title": "HTTP Check Method",
+                    "type": "string"
+                },
                 "timeout": {
                     "default": 10,
                     "description": "The total timeout in seconds for the check to execute",
@@ -491,12 +497,6 @@
                     "description": "If checking a hostname, require all IP addresses from the DNS response to pass the health check. If False, any single IP address that returns a successful check will return the service as healthy.",
                     "title": "All IP Addresses Valid",
                     "type": "boolean"
-                },
-                "method": {
-                    "const": "http",
-                    "description": "Send a HTTP or HTTPS request to a web server and optionally perform various validation",
-                    "title": "HTTP Check Method",
-                    "type": "string"
                 },
                 "url": {
                     "description": "The HTTP/HTTPS URL to check",
@@ -647,6 +647,12 @@
             "additionalProperties": false,
             "description": "Model for ICMP check arguments",
             "properties": {
+                "method": {
+                    "const": "icmp",
+                    "description": "Send ICMP ping packets and ensure the responses are within the configured thresholds",
+                    "title": "ICMP Check Method",
+                    "type": "string"
+                },
                 "timeout": {
                     "default": 10,
                     "description": "The total timeout in seconds for the check to execute",
@@ -681,12 +687,6 @@
                     "description": "If checking a hostname, require all IP addresses from the DNS response to pass the health check. If False, any single IP address that returns a successful check will return the service as healthy.",
                     "title": "All IP Addresses Valid",
                     "type": "boolean"
-                },
-                "method": {
-                    "const": "icmp",
-                    "description": "Send ICMP ping packets and ensure the responses are within the configured thresholds",
-                    "title": "ICMP Check Method",
-                    "type": "string"
                 },
                 "count": {
                     "default": 3,
@@ -776,8 +776,8 @@
                 }
             },
             "required": [
-                "host",
-                "method"
+                "method",
+                "host"
             ],
             "title": "Check Arguments",
             "type": "object"
@@ -956,6 +956,12 @@
             "additionalProperties": false,
             "description": "Model for NTP check arguments",
             "properties": {
+                "method": {
+                    "const": "ntp",
+                    "description": "Send a NTP query to a NTP server and validate the response is within the configured thresholds",
+                    "title": "NTP Check Method",
+                    "type": "string"
+                },
                 "timeout": {
                     "default": 10,
                     "description": "The total timeout in seconds for the check to execute",
@@ -990,12 +996,6 @@
                     "description": "If checking a hostname, require all IP addresses from the DNS response to pass the health check. If False, any single IP address that returns a successful check will return the service as healthy.",
                     "title": "All IP Addresses Valid",
                     "type": "boolean"
-                },
-                "method": {
-                    "const": "ntp",
-                    "description": "Send a NTP query to a NTP server and validate the response is within the configured thresholds",
-                    "title": "NTP Check Method",
-                    "type": "string"
                 },
                 "port": {
                     "default": 123,
@@ -1065,8 +1065,8 @@
                 }
             },
             "required": [
-                "host",
-                "method"
+                "method",
+                "host"
             ],
             "title": "Check Arguments",
             "type": "object"
@@ -1211,18 +1211,18 @@
             "additionalProperties": false,
             "description": "Model for shell command check arguments",
             "properties": {
+                "method": {
+                    "const": "shell",
+                    "description": "Run a script to determine if a service is healthy or not based on the exit code",
+                    "title": "Shell Check Method",
+                    "type": "string"
+                },
                 "timeout": {
                     "default": 10,
                     "description": "The total timeout in seconds for the check to execute",
                     "exclusiveMinimum": 0,
                     "title": "General Check Timeout",
                     "type": "integer"
-                },
-                "method": {
-                    "const": "shell",
-                    "description": "Run a script to determine if a service is healthy or not based on the exit code",
-                    "title": "Shell Check Method",
-                    "type": "string"
                 },
                 "command": {
                     "description": "The shell command to run for the health check",
@@ -1411,6 +1411,12 @@
             "additionalProperties": false,
             "description": "Model for TCP check arguments",
             "properties": {
+                "method": {
+                    "const": "tcp",
+                    "description": "Open a TCP connection to a host/port and ensure it is successful",
+                    "title": "TCO Check Method",
+                    "type": "string"
+                },
                 "timeout": {
                     "default": 10,
                     "description": "The total timeout in seconds for the check to execute",
@@ -1446,12 +1452,6 @@
                     "title": "All IP Addresses Valid",
                     "type": "boolean"
                 },
-                "method": {
-                    "const": "tcp",
-                    "description": "Open a TCP connection to a host/port and ensure it is successful",
-                    "title": "TCO Check Method",
-                    "type": "string"
-                },
                 "port": {
                     "description": "The port to attempt connecting to",
                     "exclusiveMinimum": 0,
@@ -1476,8 +1476,8 @@
                 }
             },
             "required": [
-                "host",
                 "method",
+                "host",
                 "port"
             ],
             "title": "Check Arguments",
