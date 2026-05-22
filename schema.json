@@ -1414,7 +1414,7 @@
                 "method": {
                     "const": "tcp",
                     "description": "Open a TCP connection to a host/port and ensure it is successful",
-                    "title": "TCO Check Method",
+                    "title": "TCP Check Method",
                     "type": "string"
                 },
                 "timeout": {

@@ -20,7 +20,7 @@ class TCPArgs(Remote):
     """
 
     method: Literal["tcp"] = Field(
-        title="TCO Check Method",
+        title="TCP Check Method",
         description="Open a TCP connection to a host/port and ensure it is successful",
     )
 
