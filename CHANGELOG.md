@@ -29,7 +29,7 @@ Internal:
 - The Apprise URL-scheme validator no longer rebuilds the full plugin catalogue on every notification URL in the config. `apprise.Apprise().details()` is expensive (it reflects on every installed Apprise plugin); the schema list is now computed once and cached at module scope. Also dropped the unused `ValidationInfo` parameter from the validator signature, and removed an unused `self._check = None` attribute from `Notifications`.
 - `Configuration._load_file` rewritten as a parser dispatch table (`{".yaml": yaml.safe_load, ".yml": yaml.safe_load, ".json": json.loads}`) instead of a `match`/`case` block. The supported-extension check now lives in exactly one place (was duplicated in `Configuration.__init__`), extension matching is case-insensitive, and adding another format requires one line instead of a new branch. The `ujson` dependency has been dropped — JSON config parsing now uses the stdlib `json` module (KB-scale config files don't benefit from ujson's speed). `types-ujson` removed from typing dev deps to match.
 
-## TBA - 0.1.7
+## 2026-05-22 - 0.1.7
 
 Fixes:
 
