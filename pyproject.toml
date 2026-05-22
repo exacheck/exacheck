@@ -109,13 +109,13 @@ rich = "^13.9.4"
 [tool.poetry.group.format.dependencies]
 # Packages for code formatting
 autopep8 = "^2.3.2"
-black = "^25.1.0"
+black = "^26.5.1"
 flake8 = "^7.1.2"
 
 [tool.poetry.group.test.dependencies]
 # Packages for testing
 hypothesis = {extras = ["cli"], version = "^6.129.3"}
-pytest = "^8.3.5"
+pytest = "^9.0.3"
 pytest-html = "^4.1.1"
 respx = "^0.22.0"
 
