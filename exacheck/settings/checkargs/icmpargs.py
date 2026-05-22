@@ -74,7 +74,7 @@ class ICMPArgs(Remote):
     )
 
     @field_validator("count")
-    # pylint: disable=no-self-argument
+    @classmethod
     def validate_count(cls, count: int, values: ValidationInfo) -> int | float:
         """
         Ensure that the count is a valid value
@@ -92,7 +92,7 @@ class ICMPArgs(Remote):
         return count
 
     @field_validator("interval")
-    # pylint: disable=no-self-argument
+    @classmethod
     def validate_interval(
         cls, interval: int | float, values: ValidationInfo
     ) -> int | float:
@@ -113,7 +113,7 @@ class ICMPArgs(Remote):
         return interval
 
     @field_validator("icmp_timeout")
-    # pylint: disable=no-self-argument
+    @classmethod
     def validate_icmp_timeout(
         cls, icmp_timeout: int | float, values: ValidationInfo
     ) -> int | float:
@@ -144,7 +144,7 @@ class ICMPArgs(Remote):
         return icmp_timeout
 
     @field_validator("max_loss")
-    # pylint: disable=no-self-argument
+    @classmethod
     def validate_max_loss(cls, max_loss: int, values: ValidationInfo) -> int:
         """
         Validate the max loss value is less than the number of packets being sent
@@ -163,7 +163,7 @@ class ICMPArgs(Remote):
         return max_loss
 
     @field_validator("max_latency")
-    # pylint: disable=no-self-argument
+    @classmethod
     def validate_max_latency(
         cls, max_latency: int | float, values: ValidationInfo
     ) -> int | float:
@@ -186,7 +186,7 @@ class ICMPArgs(Remote):
         return max_latency
 
     @field_validator("max_jitter")
-    # pylint: disable=no-self-argument
+    @classmethod
     def validate_max_jitter(
         cls, max_jitter: int | float, values: ValidationInfo
     ) -> int | float:

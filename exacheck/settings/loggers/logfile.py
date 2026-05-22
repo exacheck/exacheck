@@ -67,7 +67,7 @@ class LogFile(Base):
     )
 
     @field_validator("destination")
-    # pylint: disable=no-self-argument
+    @classmethod
     def validate_writeable(cls, destination: FilePath) -> FilePath:
         """Validate that the path to the log file/log file itself is writeable.
 

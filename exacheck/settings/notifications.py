@@ -62,12 +62,7 @@ class Notifications(Base):
     events: list[Literal["announce", "info", "error", "withdraw"]] = Field(
         title="Notify Events",
         description="The list of events that should result in notifications being sent to this target",
-        default=[
-            "announce",
-            "error",
-            "info",
-            "withdraw",
-        ],
+        default=["announce", "error", "info", "withdraw"],
     )
 
     general_events: bool = Field(
@@ -77,7 +72,8 @@ class Notifications(Base):
     )
 
     @field_validator("url")
-    def validate_url(cls, url: AnyUrl) -> AnyUrl:  # pylint: disable=no-self-argument
+    @classmethod
+    def validate_url(cls, url: AnyUrl) -> AnyUrl:
         """
         Validate the notification URL
         """

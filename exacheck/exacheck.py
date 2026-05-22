@@ -12,7 +12,7 @@ from multiprocessing import Process, Queue
 from pathlib import Path
 from pprint import pformat
 from time import sleep
-from typing import Tuple, cast
+from typing import Tuple
 from signal import signal, SIGTERM, SIGINT, SIGHUP
 import sys
 import importlib.metadata
@@ -364,7 +364,7 @@ class ExaCheck:
             import sentry_sdk  # pylint: disable=import-outside-toplevel
 
             sentry_sdk.init(
-                dsn=cast(str, self.configuration.settings.sentry.dsn),
+                dsn=str(self.configuration.settings.sentry.dsn),
                 release=f"exacheck@{importlib.metadata.version('exacheck')}",
                 attach_stacktrace=self.configuration.settings.sentry.attach_stacktrace,
                 include_local_variables=self.configuration.settings.sentry.include_local_variables,

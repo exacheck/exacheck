@@ -56,7 +56,7 @@ class Syslog(Base):
     )
 
     @field_validator("destination")
-    # pylint: disable=no-self-argument
+    @classmethod
     def validate_destination(
         cls, destination: Literal["/dev/log"] | str
     ) -> Literal["/dev/log"] | str:

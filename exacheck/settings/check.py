@@ -145,7 +145,7 @@ class Check(Base):
     )
 
     @model_validator(mode="before")
-    # pylint: disable=no-self-argument
+    @classmethod
     def set_prefixes_list(cls, values: dict) -> dict:
         """
         Set the list of prefixes to advertise to a list if it is not already
@@ -167,7 +167,7 @@ class Check(Base):
         return values
 
     @model_validator(mode="before")
-    # pylint: disable=no-self-argument
+    @classmethod
     def set_path_id(cls, values: dict) -> dict:
         """
         If the path ID attribute is defined and it is a string, convert to an IPv4Address object
@@ -190,7 +190,7 @@ class Check(Base):
         return values
 
     @model_validator(mode="before")
-    # pylint: disable=no-self-argument
+    @classmethod
     def validate_communities_string(cls, values: dict) -> dict:
         """
         If the communities attribute is set, ensure that it is a string or list of strings
@@ -217,7 +217,7 @@ class Check(Base):
         return values
 
     @model_validator(mode="before")
-    # pylint: disable=no-self-argument
+    @classmethod
     def set_as_path(cls, values: dict) -> dict:
         """
         If the AS path attribute is set, convert to a string as it may be an integer
@@ -235,7 +235,7 @@ class Check(Base):
         return values
 
     @field_validator("as_path")
-    # pylint: disable=no-self-argument
+    @classmethod
     def validate_as_path(cls, as_path: str, values: ValidationInfo) -> str:
         """
         Validate the AS path attribute
@@ -255,7 +255,7 @@ class Check(Base):
         return as_path
 
     @field_validator("communities")
-    # pylint: disable=no-self-argument
+    @classmethod
     def validate_communities(cls, communities: list[str]) -> list[str]:
         """
         Validate BGP communities
@@ -275,7 +275,7 @@ class Check(Base):
         return communities
 
     @field_validator("nexthop")
-    # pylint: disable=no-self-argument
+    @classmethod
     def validate_nexthop(
         cls,
         nexthop: IPv4Address | IPv6Address | Literal["self"],

@@ -37,7 +37,7 @@ class TCPArgs(Remote):
     )
 
     @field_validator("tcp_timeout")
-    # pylint: disable=no-self-argument
+    @classmethod
     def validate_tcp_timeout(
         cls, tcp_timeout: int | float, values: ValidationInfo
     ) -> int | float:

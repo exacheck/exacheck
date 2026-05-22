@@ -42,7 +42,8 @@ class Remote(Base, ABC):
     )
 
     @field_validator("address_family")
-    def validate_address_family(  # NOSONAR pylint: disable=no-self-argument
+    @classmethod
+    def validate_address_family(  # NOSONAR
         cls, address_family: Literal["ipv4", "ipv6"], values: ValidationInfo
     ) -> str:
         """

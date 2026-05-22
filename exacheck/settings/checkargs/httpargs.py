@@ -7,7 +7,8 @@ HTTP health check arguments
 """
 
 import re
-from typing import Literal, Optional, Pattern
+from re import Pattern
+from typing import Literal, Optional
 from urllib.parse import urlparse
 
 from pydantic import (
@@ -106,7 +107,7 @@ class HTTPArgs(Remote):
     )
 
     @field_validator("http_timeout")
-    # pylint: disable=no-self-argument
+    @classmethod
     def validate_http_timeout(
         cls, http_timeout: int | float, values: ValidationInfo
     ) -> int | float:
@@ -124,7 +125,7 @@ class HTTPArgs(Remote):
         return http_timeout
 
     @field_validator("headers")
-    # pylint: disable=no-self-argument
+    @classmethod
     def validate_header_names(cls, headers: dict[str, str]) -> dict[str, str]:
         """
         Ensure that the header names are valid
@@ -144,7 +145,7 @@ class HTTPArgs(Remote):
         return headers
 
     @model_validator(mode="before")
-    # pylint: disable=no-self-argument
+    @classmethod
     def set_require_status(cls, values: dict) -> dict:
         """
         If expected_status has a value set require_status must be set to false as the expected status code
@@ -165,7 +166,7 @@ class HTTPArgs(Remote):
         return values
 
     @model_validator(mode="before")
-    # pylint: disable=no-self-argument
+    @classmethod
     def set_expected_status(cls, values: dict) -> dict:
         """
         If expected_status has been defined and it is an integer, convert it to a list
@@ -181,7 +182,7 @@ class HTTPArgs(Remote):
         return values
 
     @model_validator(mode="before")
-    # pylint: disable=no-self-argument
+    @classmethod
     def set_host(cls, values: dict) -> dict:
         """
         If no "host" value is provided, set it to the hostname of the URL
@@ -210,7 +211,7 @@ class HTTPArgs(Remote):
         return values
 
     @model_validator(mode="before")
-    # pylint: disable=no-self-argument
+    @classmethod
     def set_request_method_case(cls, values: dict) -> dict:
         """
         Set the HTTP method to uppercase
@@ -227,6 +228,7 @@ class HTTPArgs(Remote):
         return values
 
     @field_validator("data")
+    @classmethod
     def validate_data(
         cls, data: dict[str, str], values: ValidationInfo
     ) -> dict[str, str]:

@@ -51,12 +51,7 @@ class Base(BaseSettings, ABC):
     ] = Field(
         title="Log Events",
         description="The list of events that should be logged to this logging target",
-        default=[
-            "announce",
-            "error",
-            "info",
-            "withdraw",
-        ],
+        default=["announce", "error", "info", "withdraw"],
     )
 
     subsystems: list[

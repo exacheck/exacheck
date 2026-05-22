@@ -6,7 +6,8 @@ ExaCheck - ExaBGP Health Checker
 DNS health check arguments
 """
 
-from typing import Literal, Optional, Pattern
+from re import Pattern
+from typing import Literal, Optional
 
 from pydantic import Field, model_validator, field_validator, PositiveInt, PositiveFloat
 from pydantic_core.core_schema import ValidationInfo
@@ -69,7 +70,7 @@ class DNSArgs(Remote):
     )
 
     @model_validator(mode="before")
-    # pylint: disable=no-self-argument
+    @classmethod
     def set_protocol(cls, values: dict) -> dict:
         """
         Convert the protocol to lowercase
@@ -79,7 +80,7 @@ class DNSArgs(Remote):
         return values
 
     @model_validator(mode="before")
-    # pylint: disable=no-self-argument
+    @classmethod
     def set_query_type(cls, values: dict) -> dict:
         """
         Convert the query type to lowercase
@@ -89,7 +90,7 @@ class DNSArgs(Remote):
         return values
 
     @field_validator("dns_timeout")
-    # pylint: disable=no-self-argument
+    @classmethod
     def validate_dns_timeout(
         cls, dns_timeout: int | float, values: ValidationInfo
     ) -> int | float:
@@ -107,7 +108,7 @@ class DNSArgs(Remote):
         return dns_timeout
 
     @field_validator("require_resolve")
-    # pylint: disable=no-self-argument
+    @classmethod
     def validate_require_resolve(
         cls, require_resolve: bool, values: ValidationInfo
     ) -> bool:

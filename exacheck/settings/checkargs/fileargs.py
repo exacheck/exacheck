@@ -37,7 +37,7 @@ class FileArgs(Base):
     )
 
     @field_validator("path")
-    # pylint: disable=no-self-argument
+    @classmethod
     def validate_path(cls, path: Path) -> Path:
         """Validate that the file parent directory can be read
 

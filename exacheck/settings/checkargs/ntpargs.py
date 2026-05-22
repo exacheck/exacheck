@@ -57,7 +57,7 @@ class NTPArgs(Remote):
     )
 
     @field_validator("ntp_timeout")
-    # pylint: disable=no-self-argument
+    @classmethod
     def validate_ntp_timeout(
         cls, ntp_timeout: int | float, values: ValidationInfo
     ) -> int | float:

@@ -62,7 +62,7 @@ class CheckResult(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     @field_validator("exception")
-    # pylint: disable=no-self-argument
+    @classmethod
     def validate_exception(cls, exception: Exception | None) -> Exception | None:
         """
         Validate that if an exception is provided that it really is an exception

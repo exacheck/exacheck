@@ -71,7 +71,7 @@ class Settings(Base):
     )
 
     @model_validator(mode="before")
-    # pylint: disable=no-self-argument
+    @classmethod
     def validate_logfiles_unique(cls, values: dict) -> dict:
         """
         If any file based loggers are defined, ensure the file names are unique
@@ -100,7 +100,7 @@ class Settings(Base):
         return values
 
     @field_validator("logging")
-    # pylint: disable=no-self-argument
+    @classmethod
     def validate_log_filter_names(
         cls, logging: list[LogFile | Syslog], values: ValidationInfo
     ) -> list[LogFile | Syslog]:
