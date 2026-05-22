@@ -9,6 +9,12 @@ Features:
 - `SIGHUP` now triggers an immediate configuration reload (previously operators had to wait up to one `monitoring_interval` for the file polling loop to notice the change).
 - The reload now logs a warning when top-level fields that the master only reads at startup — `exacheck` (monitoring_interval / live_reload), `logging`, `sentry` — are modified, so operators know those changes will not take effect until ExaCheck is restarted.
 
+Improvements:
+
+- Remove multiple sections of redundant code
+- Clean up check method definitions
+- Simplify the file check method
+
 Fixes:
 
 - `Announcer.send_command` no longer interpolates the literal string `"None"` into ExaBGP commands when a check has `metric_down` set but no normal `metric`. The empty metric token is now elided and intervening whitespace collapsed.
