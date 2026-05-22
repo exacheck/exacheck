@@ -135,3 +135,60 @@ def test_noop_notifications_does_not_start_a_thread():
     notifications = _notifications(noop=True)
     notifications.notify(event="info", message="m", title="t")
     assert notifications._thread is None  # never created
+
+
+def test_apprise_rejecting_target_url_is_logged_during_setup(caplog):
+    """Apprise.add returns False (no exception) for many bad URLs.
+
+    The setup loop must log an error in that case — without the return-value
+    check the rejected target would silently disappear and notifications
+    would appear to be "working" but never delivered.
+    """
+    # Bypass Apprise entirely so we can deterministically force a False
+    # return without depending on a particular Apprise plugin's behaviour.
+    from unittest.mock import patch
+    from exacheck.notifications import Notifications
+
+    with patch("exacheck.notifications.apprise.Apprise") as apprise_cls:
+        instance = apprise_cls.return_value
+        instance.add.return_value = False  # Apprise silently rejected
+
+        sink_msgs = []
+        sink_id = logger.add(lambda r: sink_msgs.append(r), level="ERROR")
+        try:
+            config = [
+                NotificationSettings(
+                    name="t",
+                    url="json://example.com",
+                    events=["announce"],
+                )
+            ]
+            Notifications(log_context=logger.bind(check_name="t"), configuration=config)
+            assert any("Apprise rejected" in m for m in sink_msgs), (
+                f"Expected an 'Apprise rejected' error log; got {sink_msgs!r}"
+            )
+        finally:
+            logger.remove(sink_id)
+
+
+def test_apprise_notify_false_return_is_logged():
+    """A False return from apprise.notify means at least one target failed."""
+    fake_apprise = MagicMock()
+    fake_apprise.notify.return_value = False  # partial or full delivery failure
+    notifications = _notifications(apprise_mock=fake_apprise)
+
+    sink_msgs = []
+    sink_id = logger.add(lambda r: sink_msgs.append(r), level="ERROR")
+    try:
+        notifications.notify(event="info", message="m", title="t")
+        deadline = time.monotonic() + 2
+        while time.monotonic() < deadline:
+            if any("failed to deliver" in m for m in sink_msgs):
+                break
+            time.sleep(0.01)
+        assert any("failed to deliver" in m for m in sink_msgs), (
+            f"Expected a failed-to-deliver error log; got {sink_msgs!r}"
+        )
+    finally:
+        logger.remove(sink_id)
+        notifications.shutdown(timeout=2)

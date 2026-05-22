@@ -9,9 +9,30 @@ Store configuration for notification channels
 from typing import Optional, Literal
 
 from pydantic import Field, AnyUrl, field_validator
-from pydantic_core.core_schema import ValidationInfo
 
 from ._base import Base
+
+
+# Cache of supported Apprise URL schemes. apprise.Apprise().details() walks
+# the full plugin catalogue and is expensive, so resolve it once on first
+# call instead of once per validated notification URL.
+_APPRISE_SCHEMAS: Optional[list[str]] = None
+
+
+def _apprise_schemas() -> list[str]:
+    """Return the cached set of Apprise URL schemes supported by this install."""
+    # pylint: disable=global-statement
+    global _APPRISE_SCHEMAS
+    if _APPRISE_SCHEMAS is None:
+        import apprise  # pylint: disable=import-outside-toplevel
+
+        details = apprise.Apprise().details()
+        _APPRISE_SCHEMAS = [
+            scheme
+            for schema in details["schemas"]
+            for scheme in schema["details"]["tokens"]["schema"]["values"]
+        ]
+    return _APPRISE_SCHEMAS
 
 
 class Notifications(Base):
@@ -56,41 +77,25 @@ class Notifications(Base):
     )
 
     @field_validator("url")
-    def validate_url(  # NOSONAR pylint: disable=no-self-argument
-        cls, url: AnyUrl, values: ValidationInfo
-    ) -> AnyUrl:
+    def validate_url(cls, url: AnyUrl) -> AnyUrl:  # pylint: disable=no-self-argument
         """
         Validate the notification URL
         """
-        # Create the apprise object
-        import apprise
+        # Try registering the target with a throwaway Apprise instance to
+        # catch any plugin-side validation errors that surface as exceptions.
+        import apprise  # pylint: disable=import-outside-toplevel
 
-        apobj = apprise.Apprise()
-
-        # Try adding the notification target
         try:
-            apobj.add(url)
+            apprise.Apprise().add(str(url))
         except Exception as exc:
             raise ValueError(f"Invalid notification target URL: {exc}")
 
-        # Create a list to store all schema names for available notifications
-        schemas = []
-
-        # Loop over all schemas available from apprise and add to schemas
-        details = apobj.details()
-        schemas.extend(
-            [
-                scheme
-                for schema in details["schemas"]
-                for scheme in schema["details"]["tokens"]["schema"]["values"]
-            ]
-        )
-
-        # Make sure the URL schema matches
-        if url.scheme not in schemas:
+        # Make sure the URL scheme is one Apprise actually supports.
+        if url.scheme not in _apprise_schemas():
             raise ValueError(
-                f"Invalid notification target URL scheme (check https://github.com/caronc/apprise for supported schemes): {url.scheme}"
+                f"Invalid notification target URL scheme (check "
+                f"https://github.com/caronc/apprise for supported schemes): "
+                f"{url.scheme}"
             )
 
-        # Return the URL
         return url

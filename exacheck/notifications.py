@@ -43,9 +43,6 @@ class Notifications:
         # Set the logging context
         self.log = log_context.bind(subsystem="notification")
 
-        # Set an empty check name
-        self._check = None
-
         # Async send infrastructure. The thread is created lazily on first
         # use because this object is forked into worker processes, and
         # threads do not survive fork() — each process needs its own.
@@ -150,15 +147,26 @@ class Notifications:
                 tags=", ".join(tags),
             )
 
-            # Create the target URL with the tags
+            # Register the target URL with the tags. Apprise.add returns a
+            # bool — False on most validation failures (no exception raised).
+            # We check both paths so silent rejections don't masquerade as
+            # successful registrations.
             try:
-                self.apprise.add(f"{target.url}", tag=tags)
-            except Exception as exc:
+                added = self.apprise.add(str(target.url), tag=tags)
+            except Exception as exc:  # pylint: disable=broad-except
                 self.log.bind(event="error").error(
                     "Failed to configure notification target {name} with URL {url}; skipping: {error}",
                     name=target.name,
                     url=target.url,
                     error=exc,
+                )
+                continue
+            if not added:
+                self.log.bind(event="error").error(
+                    "Apprise rejected notification target {name} with URL {url}; "
+                    "notifications will not be sent to this target",
+                    name=target.name,
+                    url=target.url,
                 )
 
     def notify(
@@ -270,13 +278,22 @@ class Notifications:
                     return
                 log = spec.pop("_log")
                 try:
-                    self.apprise.notify(**spec)
+                    delivered = self.apprise.notify(**spec)
                 except Exception as exc:  # pylint: disable=broad-except
                     log.bind(event="error").error(
                         "Failed to send notification: {error}", error=exc,
                     )
                 else:
-                    log.bind(event="debug").debug("Notification sent")
+                    # apprise.notify returns True only if *every* configured
+                    # target accepted the notification. False can mean partial
+                    # or total failure without a raised exception (e.g. a
+                    # webhook returning a non-2xx response).
+                    if delivered:
+                        log.bind(event="debug").debug("Notification sent")
+                    else:
+                        log.bind(event="error").error(
+                            "One or more notification targets failed to deliver",
+                        )
             finally:
                 self._queue.task_done()
 
