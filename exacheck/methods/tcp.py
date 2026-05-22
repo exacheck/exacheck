@@ -55,26 +55,17 @@ class TCP(Remote):
         """
         Attempt making a TCP connection to the IP address/port and return true/false
         """
-
-        # Set up the socket
-        self.log.bind(event="debug").debug(
-            "Opening socket to {addr}:{port}",
-            addr=addr,
-            port=self.args.port,
-        )
-        sock = socket.socket(family=family, type=socket.SOCK_STREAM)
-        sock.settimeout(self.args.tcp_timeout)
-
-        # Open connection
         self.log.bind(event="debug").debug(
             "Testing connection to {addr}:{port}",
             addr=addr,
             port=self.args.port,
         )
+
         try:
-            result = sock.connect_ex((addr, self.args.port))
+            with socket.socket(family=family, type=socket.SOCK_STREAM) as sock:
+                sock.settimeout(self.args.tcp_timeout)
+                result = sock.connect_ex((addr, self.args.port))
         except Exception as exc:  # pylint: disable=broad-except
-            # Log failure
             self.log.bind(event="debug").debug(
                 "Error connecting to {addr}:{port}: {error}",
                 addr=addr,
@@ -82,30 +73,8 @@ class TCP(Remote):
                 error=f"{exc}",
                 exception=exc,
             )
-
-            # Shut down/close socket
-            try:
-                sock.shutdown(socket.SHUT_RDWR)
-                sock.close()
-            except Exception:  # pylint: disable=broad-except
-                pass
-
-            # Return failed result
             return False
 
-        # Shut down/close socket
-        try:
-            self.log.bind(event="debug").debug(
-                "Shutting down socket to {addr}:{port}",
-                addr=addr,
-                port=self.args.port,
-            )
-            sock.shutdown(socket.SHUT_RDWR)
-            sock.close()
-        except Exception:  # pylint: disable=broad-except
-            pass
-
-        # Return the result as a bool
         self.log.bind(event="debug").debug(
             "Connection to {addr}:{port} returned code: {result}",
             addr=addr,

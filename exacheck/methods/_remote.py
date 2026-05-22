@@ -140,47 +140,31 @@ class Remote(Base, ABC):
         # Log the result
         self._log_result(result=result)
 
-        # If all health checks must be successful and a failure was returned, return the failed check result
-        if self.args.all_valid and result.success is False:
-            self.log.bind(event="error").warning(
-                "Health check for {host} using IP address {addr} failed; skipping subsequent IPs if any",
-                host=self.args.host,
-                addr=addr,
-            )
-            return result
+        # Short-circuit when this IP's result determines the overall outcome:
+        # all_valid mode stops on any failure; any-valid mode stops on any success.
+        short_circuit = self.args.all_valid != result.success
+        continuation = (
+            "skipping subsequent IPs if any"
+            if short_circuit
+            else "proceeding with subsequent IPs if any"
+        )
 
-        # If only a single health check needs to be successful, return the successful result
-        if not self.args.all_valid and result.success is True:
-            self.log.bind(event="info").success(
-                "Health check for {host} using IP address {addr} successful; skipping subsequent IPs if any",
-                host=self.args.host,
-                addr=addr,
-            )
-            return result
-
-        # If the check was successful, log but continue on to next health check
         if result.success:
             self.log.bind(event="info").success(
-                (
-                    "Health check for {host} using IP address {addr} successful; proceeding with subsequent "
-                    "IPs if any"
-                ),
+                "Health check for {host} using IP address {addr} successful; {continuation}",
                 host=self.args.host,
                 addr=addr,
+                continuation=continuation,
             )
         else:
-            # The health check failed, log and continue on to next IP address if defined
             self.log.bind(event="error").warning(
-                (
-                    "Health check for {host} using IP address {addr} failed; health check will proceed with "
-                    "subsequent IPs if any"
-                ),
+                "Health check for {host} using IP address {addr} failed; {continuation}",
                 host=self.args.host,
                 addr=addr,
+                continuation=continuation,
             )
 
-        # Return empty result
-        return None
+        return result if short_circuit else None
 
     @abstractmethod
     def check_one(self, addr: str) -> CheckResult:
